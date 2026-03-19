@@ -3,12 +3,16 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack",
+    "dev": "next dev",
     "build": "next build --turbopack",
     "start": "next start",
     "lint": "eslint"
   },
   "dependencies": {
+    "@portabletext/react": "^6.0.3",
+    "@sanity/icons": "^3.7.4",
+    "@sanity/image-url": "^1.2.0",
+    "@sanity/vision": "^4.22.0",
     "@tailwindcss/line-clamp": "^0.4.4",
     "framer-motion": "^12.23.24",
     "html2canvas": "^1.4.1",
@@ -16,14 +20,18 @@
     "jspdf-autotable": "^5.0.7",
     "lucide-react": "^0.545.0",
     "next": "^16.1.6",
+    "next-sanity": "^11.6.12",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
+    "resend": "^6.9.4",
+    "sanity": "^4.22.0",
+    "styled-components": "^6.3.12",
     "uuid": "^13.0.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4",
-    "@types/node": "^20.19.20",
+    "@types/node": "^20.19.37",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "autoprefixer": "^10.4.21",

@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useEffect, useRef, useCallback, ReactElement } from "react";
+import dynamic from 'next/dynamic'
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 type FinType =
@@ -580,7 +581,7 @@ export default function ZHeat() {
     const r = S.res;
 
     // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-explicit-any
-    const { jsPDF: _Ctor } = require("jspdf") as { jsPDF: any };
+    const { jsPDF: _Ctor } = await import("jspdf");
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const doc: any = new (_Ctor as any)({ orientation: "portrait", unit: "mm", format: "a4" });
     const PW = 210, PH = 297;

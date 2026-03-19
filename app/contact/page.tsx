@@ -10,15 +10,15 @@ const fadeUp = (delay = 0) => ({
 
 const SocialLinks = () => {
     const socials = [
-        {
-            name: "Twitter / X",
-            href: "https://twitter.com",
-            icon: (
-                <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
-                    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.746l7.73-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-                </svg>
-            ),
-        },
+        // {
+        //     name: "Twitter / X",
+        //     href: "https://twitter.com",
+        //     icon: (
+        //         <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+        //             <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.746l7.73-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+        //         </svg>
+        //     ),
+        // },
         {
             name: "Instagram",
             href: "https://www.instagram.com/zhivam.tech/",
@@ -61,12 +61,18 @@ const SocialLinks = () => {
 };
 
 export default function ContactPage() {
-    const [email, setEmail] = useState("");
-    const [phone, setPhone] = useState("");
-    const [emailError, setEmailError] = useState("");
-    const [phoneError, setPhoneError] = useState("");
-    const [message, setMessage] = useState("");
-    const [focused, setFocused] = useState<string | null>(null);
+    const [name, setName] = useState("")
+    const [email, setEmail] = useState("")
+    const [phone, setPhone] = useState("")
+    const [company, setCompany] = useState("")
+    const [location, setLocation] = useState("")
+    const [message, setMessage] = useState("")
+    const [emailError, setEmailError] = useState("")
+    const [phoneError, setPhoneError] = useState("")
+    const [focused, setFocused] = useState<string | null>(null)
+    const [marketingConsent, setMarketingConsent] = useState(false)
+    const [isSubmitting, setIsSubmitting] = useState(false)
+    const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle')
 
     const validateEmail = (value: string) => {
         const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -84,6 +90,38 @@ export default function ContactPage() {
     const handleMessageChange = (value: string) => {
         if (countWords(value) <= 1000) setMessage(value);
     };
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault()
+        if (emailError || phoneError) return
+
+        setIsSubmitting(true)
+        setSubmitStatus('idle')
+
+        try {
+            const res = await fetch('/api/contact', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, email, phone, company, location, message, marketingConsent })
+            })
+
+            if (res.ok) {
+                setSubmitStatus('success')
+                setName("")
+                setEmail("")
+                setPhone("")
+                setCompany("")
+                setLocation("")
+                setMessage("")
+            } else {
+                setSubmitStatus('error')
+            }
+        } catch {
+            setSubmitStatus('error')
+        } finally {
+            setIsSubmitting(false)
+        }
+    }
 
     const inputBase =
         "w-full bg-slate-900/50 border rounded-xl px-4 py-3 text-sm text-white placeholder-slate-500 focus:outline-none transition-all duration-200";
@@ -111,9 +149,8 @@ export default function ContactPage() {
 
             <div className="relative w-full max-w-5xl flex flex-col lg:flex-row gap-16 items-start">
 
-                {/* ── LEFT ── */}
+                {/* LEFT */}
                 <div className="flex-1 lg:sticky lg:top-28">
-
                     <motion.div {...fadeUp(0)} className="inline-flex items-center gap-2 text-xs font-medium text-cyan-400 bg-cyan-400/10 border border-cyan-400/20 rounded-full px-3 py-1 mb-6">
                         <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
                         Available for projects
@@ -146,8 +183,9 @@ export default function ContactPage() {
                     </motion.div>
                 </div>
 
-                {/* ── FORM ── */}
+                {/* FORM */}
                 <motion.form
+                    onSubmit={handleSubmit}
                     variants={stagger}
                     initial="initial"
                     animate="animate"
@@ -161,6 +199,8 @@ export default function ContactPage() {
                         <input
                             required
                             type="text"
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
                             placeholder="Your full name"
                             onFocus={() => setFocused("name")}
                             onBlur={() => setFocused(null)}
@@ -212,6 +252,8 @@ export default function ContactPage() {
                         </label>
                         <input
                             type="text"
+                            value={company}
+                            onChange={(e) => setCompany(e.target.value)}
                             placeholder="Your company (optional)"
                             onFocus={() => setFocused("company")}
                             onBlur={() => setFocused(null)}
@@ -227,6 +269,8 @@ export default function ContactPage() {
                         <input
                             required
                             type="text"
+                            value={location}
+                            onChange={(e) => setLocation(e.target.value)}
                             placeholder="City, Country"
                             onFocus={() => setFocused("location")}
                             onBlur={() => setFocused(null)}
@@ -256,16 +300,64 @@ export default function ContactPage() {
                         </div>
                     </motion.div>
 
-                    {/* Submit */}
+                    {/* Marketing consent */}
                     <motion.div variants={fadeUp(0)}>
+                        <label className="flex items-start gap-3 cursor-pointer group">
+                            <div className="relative mt-0.5 shrink-0">
+                                <input
+                                    type="checkbox"
+                                    checked={marketingConsent}
+                                    onChange={(e) => setMarketingConsent(e.target.checked)}
+                                    className="peer sr-only"
+                                />
+                                <div className="w-4 h-4 rounded border border-slate-600 bg-slate-900/50 peer-checked:bg-cyan-500 peer-checked:border-cyan-500 transition-all duration-200 flex items-center justify-center">
+                                    {marketingConsent && (
+                                        <svg className="w-2.5 h-2.5 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                        </svg>
+                                    )}
+                                </div>
+                            </div>
+                            <span className="text-xs text-slate-400 leading-relaxed group-hover:text-slate-300 transition-colors">
+                                Yes, I would like to receive blog updates, research insights, and occasional offers from Zhivam.
+                                <span className="text-slate-600 ml-1">(Optional — unsubscribe anytime)</span>
+                            </span>
+                        </label>
+                    </motion.div>
+
+                    {/* Submit */}
+                    <motion.div variants={fadeUp(0)} className="space-y-3">
                         <motion.button
                             type="submit"
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.98 }}
-                            className="w-full relative overflow-hidden bg-cyan-500 hover:bg-cyan-400 text-black font-semibold py-3.5 rounded-xl transition-colors duration-200 text-sm tracking-wide"
+                            disabled={isSubmitting}
+                            whileHover={{ scale: isSubmitting ? 1 : 1.02 }}
+                            whileTap={{ scale: isSubmitting ? 1 : 0.98 }}
+                            className="w-full relative overflow-hidden bg-cyan-500 hover:bg-cyan-400 disabled:opacity-60 disabled:cursor-not-allowed text-black font-semibold py-3.5 rounded-xl transition-colors duration-200 text-sm tracking-wide"
                         >
-                            Send Message →
+                            {isSubmitting ? 'Sending...' : 'Send Message →'}
                         </motion.button>
+
+                        {/* Success message */}
+                        {submitStatus === 'success' && (
+                            <motion.div
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="flex items-center gap-2 text-sm text-green-400 bg-green-400/10 border border-green-400/20 rounded-xl px-4 py-3"
+                            >
+                                <span>✓</span> Message sent! We'll get back to you within 24 hours.
+                            </motion.div>
+                        )}
+
+                        {/* Error message */}
+                        {submitStatus === 'error' && (
+                            <motion.div
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="flex items-center gap-2 text-sm text-red-400 bg-red-400/10 border border-red-400/20 rounded-xl px-4 py-3"
+                            >
+                                <span>✕</span> Something went wrong. Please try again or email us directly.
+                            </motion.div>
+                        )}
                     </motion.div>
                 </motion.form>
             </div>

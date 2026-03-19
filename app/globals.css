@@ -78,3 +78,10 @@ body {
   background-size: 400% 400%;
   animation: thermalGradient 4s linear infinite;
 }
+
+.blog-content p {
+  text-align: justify !important;
+  hyphens: auto !important;
+  -webkit-hyphens: auto !important;
+  word-spacing: -0.05em !important;
+}

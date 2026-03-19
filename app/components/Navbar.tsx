@@ -6,25 +6,42 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
     Search,
     ArrowRight,
-    ShoppingCart,
     ChevronDown,
     X,
+    FileText,
+    Wrench,
 } from "lucide-react";
 import { useCart } from "@/app/contexts/CartContext";
 import { useState, useRef, useEffect } from "react";
-import { services } from "@/app/components/ServicesSection";
+import { services, rdServices } from "@/app/components/ServicesSection";
 import { usePathname } from "next/navigation";
+import { client } from "@/lib/sanity";
+
+type BlogResult = {
+    title: string;
+    slug: string;
+    category: string;
+}
+
+type SearchResult = {
+    id: string | number;
+    title: string;
+    href: string;
+    type: "blog" | "service";
+    category?: string;
+}
 
 export default function Navbar() {
     const { cartCount, cartIconRef } = useCart();
     const pathname = usePathname();
+    if (pathname.startsWith('/studio')) return null;
 
     const [showSearch, setShowSearch] = useState(false);
     const [mobileOpen, setMobileOpen] = useState(false);
     const [query, setQuery] = useState("");
     const [pillStyle, setPillStyle] = useState<{ left: number; width: number } | null>(null);
+    const [blogPosts, setBlogPosts] = useState<BlogResult[]>([]);
 
-    // Dropdown states
     const [dropdownOpen, setDropdownOpen] = useState<string | null>(null);
     const [mobileDropdownOpen, setMobileDropdownOpen] = useState<string | null>(null);
 
@@ -43,18 +60,51 @@ export default function Navbar() {
             href: "/zheat",
             dropdown: [
                 { name: "Heatsink", href: "/zheat" },
-                { name: "Coldplate", href: "/zheat" } // Change the coldplate route here when ready
+                { name: "Coldplate", href: "/coming-soon" }
             ]
         },
         { name: "Blog", href: "/blog" },
         { name: "Contact", href: "/contact" },
     ];
 
-    const results = services.filter((s) =>
-        s.title.toLowerCase().includes(query.toLowerCase())
-    );
+    // Fetch blog posts from Sanity on mount
+    useEffect(() => {
+        client.fetch(`
+            *[_type == "post"] | order(publishedAt desc) {
+                title,
+                "slug": slug.current,
+                "category": categories[0]->title
+            }
+        `).then((posts: BlogResult[]) => {
+            setBlogPosts(posts)
+        })
+    }, [])
 
-    /* Update pill position whenever pathname changes */
+    // Combine blog + service results
+    const allResults: SearchResult[] = [
+        ...blogPosts.map((post) => ({
+            id: post.slug,
+            title: post.title,
+            href: `/blog/${post.slug}`,
+            type: "blog" as const,
+            category: post.category,
+        })),
+        ...rdServices.map((s) => ({
+            id: s.id,
+            title: s.title,
+            href: `/servicesoffered`,
+            type: "service" as const,
+            category: s.subtitle || "R&D & Engineering",
+        })),
+    ]
+
+    const results = query
+        ? allResults.filter((r) =>
+            r.title.toLowerCase().includes(query.toLowerCase())
+        )
+        : []
+
+    /* Update pill position */
     useEffect(() => {
         const activeHref = navItems.find(
             (item) =>
@@ -80,7 +130,7 @@ export default function Navbar() {
         }
     }, [pathname]);
 
-    /* Close on scroll with threshold */
+    /* Close on scroll */
     useEffect(() => {
         const handleScroll = () => {
             if (window.scrollY > 10) {
@@ -138,7 +188,7 @@ export default function Navbar() {
     const handleMouseLeave = () => {
         dropdownTimeout = setTimeout(() => {
             setDropdownOpen(null);
-        }, 150); // slight delay to prevent flickering
+        }, 150);
     };
 
     return (
@@ -163,7 +213,6 @@ export default function Navbar() {
             >
                 {/* LEFT */}
                 <div className="flex items-center gap-4">
-                    {/* Logo */}
                     <Link href="/" className="flex items-center hover:opacity-80 transition-opacity">
                         <Image
                             src="/images/favicon (1).png"
@@ -174,12 +223,10 @@ export default function Navbar() {
                         />
                     </Link>
 
-                    {/* Desktop nav */}
                     <div
                         ref={navContainerRef}
                         className="hidden md:flex relative bg-slate-800/50 border border-slate-700/50 rounded-full px-3 py-2 space-x-1"
                     >
-                        {/* Sliding pill */}
                         {pillStyle && (
                             <motion.span
                                 className="absolute top-2 bottom-2 rounded-full bg-cyan-500/15 border border-cyan-500/20 pointer-events-none"
@@ -204,25 +251,23 @@ export default function Navbar() {
                                     onMouseLeave={() => item.dropdown && handleMouseLeave()}
                                 >
                                     <Link
-                                        href={item.dropdown ? "#" : item.href} // Prevent routing on click if it has a dropdown
+                                        href={item.dropdown ? "#" : item.href}
                                         ref={(el) => { linkRefs.current[item.href] = el; }}
                                         className="relative px-5 py-2 text-sm rounded-full z-10 transition-colors duration-200 flex items-center justify-center"
                                     >
                                         <span className={isActive ? "text-cyan-400" : "text-slate-400 group-hover:text-white transition-colors"}>
                                             {item.name}
                                         </span>
-                                        {/* Dropdown Chevron - Hidden by default, visible on group-hover */}
                                         {item.dropdown && (
                                             <ChevronDown
                                                 className={`absolute right-1.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 transition-all duration-200 ${dropdownOpen === item.name
-                                                        ? "rotate-180 text-cyan-400 opacity-100"
-                                                        : "opacity-0 group-hover:opacity-100 text-slate-400"
+                                                    ? "rotate-180 text-cyan-400 opacity-100"
+                                                    : "opacity-0 group-hover:opacity-100 text-slate-400"
                                                     }`}
                                             />
                                         )}
                                     </Link>
 
-                                    {/* Desktop Dropdown with transparent bridge */}
                                     <AnimatePresence>
                                         {item.dropdown && dropdownOpen === item.name && (
                                             <motion.div
@@ -230,7 +275,6 @@ export default function Navbar() {
                                                 animate={{ opacity: 1, y: 0, scale: 1 }}
                                                 exit={{ opacity: 0, y: 5, scale: 0.95 }}
                                                 transition={{ duration: 0.15, ease: "easeOut" }}
-                                                // pt-4 creates the transparent gap while keeping the dropdown hoverable
                                                 className="absolute top-full left-1/2 -translate-x-1/2 pt-4 z-50"
                                             >
                                                 <div className="w-48 bg-[#0d1520] border border-slate-700/60 rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.5)] overflow-hidden py-2">
@@ -256,7 +300,6 @@ export default function Navbar() {
 
                 {/* RIGHT */}
                 <div className="flex items-center gap-3">
-                    {/* SEARCH */}
                     <button
                         onClick={() => {
                             setShowSearch(!showSearch);
@@ -269,7 +312,6 @@ export default function Navbar() {
                         <Search className="w-[18px] h-[18px]" />
                     </button>
 
-                    {/* MOBILE CHEVRON */}
                     <button
                         onClick={() => {
                             setMobileOpen(!mobileOpen);
@@ -283,10 +325,10 @@ export default function Navbar() {
                         </motion.div>
                     </button>
 
-                    {/* LOGIN */}
+                    {/* To make clickable again, remove 'pointer-events-none' and 'opacity-50' classes */}
                     <Link
                         href="/login"
-                        className="hidden md:flex items-center gap-1.5 bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/20 hover:border-cyan-400/60 rounded-full px-4 py-2 text-sm font-medium transition-all duration-200"
+                        className="hidden md:flex items-center gap-1.5 bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/20 hover:border-cyan-400/60 rounded-full px-4 py-2 text-sm font-medium transition-all duration-200 pointer-events-none opacity-50"
                     >
                         Login <ArrowRight className="w-3.5 h-3.5" />
                     </Link>
@@ -311,7 +353,7 @@ export default function Navbar() {
                             ref={searchRef}
                             value={query}
                             onChange={(e) => setQuery(e.target.value)}
-                            placeholder="Search services..."
+                            placeholder="Search blogs, services..."
                             className="w-full bg-slate-800/50 border border-slate-700/60 rounded-xl pl-10 pr-10 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400/60 transition-colors"
                         />
                         {query && (
@@ -327,28 +369,45 @@ export default function Navbar() {
                         )}
                     </div>
 
+                    {/* Results */}
                     {query && results.length > 0 && (
                         <div className="mt-2 border border-slate-700/50 rounded-xl overflow-hidden">
-                            {results.slice(0, 5).map((item, i) => (
+                            {results.slice(0, 6).map((item, i) => (
                                 <Link
                                     key={item.id}
-                                    href={`/services/${item.id}`}
+                                    href={item.href}
                                     onClick={() => {
                                         setQuery("");
                                         setShowSearch(false);
                                     }}
-                                    className={`flex items-center justify-between px-4 py-2.5 text-sm text-slate-300 hover:bg-slate-700/40 hover:text-white transition-colors ${i !== 0 ? "border-t border-slate-700/50" : ""
-                                        }`}
+                                    className={`flex items-center justify-between px-4 py-2.5 text-sm text-slate-300 hover:bg-slate-700/40 hover:text-white transition-colors ${i !== 0 ? "border-t border-slate-700/50" : ""}`}
                                 >
-                                    <span>{item.title}</span>
-                                    <ArrowRight className="w-3.5 h-3.5 text-slate-500" />
+                                    <div className="flex items-center gap-3">
+                                        {item.type === "blog" ? (
+                                            <FileText className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+                                        ) : (
+                                            <Wrench className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                                        )}
+                                        <div>
+                                            <p className="text-sm text-white">{item.title}</p>
+                                            <p className="text-xs text-slate-500">
+                                                {item.type === "blog"
+                                                    ? `Blog · ${item.category ?? ""}`
+                                                    : `Service · ${item.category ?? "R&D & Engineering"}`
+                                                }
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <ArrowRight className="w-3.5 h-3.5 text-slate-500 shrink-0" />
                                 </Link>
                             ))}
                         </div>
                     )}
 
                     {query && results.length === 0 && (
-                        <p className="text-xs text-slate-500 text-center py-3">No services found for &ldquo;{query}&rdquo;</p>
+                        <p className="text-xs text-slate-500 text-center py-3">
+                            No results found for &ldquo;{query}&rdquo;
+                        </p>
                     )}
                 </div>
             </motion.div>

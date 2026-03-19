@@ -157,6 +157,8 @@ export default function Home() {
                         loading="eager"
                         decoding="async"
                         className="absolute right-0 top-1/2 h-[155%] w-auto -translate-y-1/2 object-contain opacity-80"
+                        onContextMenu={(e) => e.preventDefault()}
+                        draggable={false}
                     />
 
                     {/* Cinematic left fade — matches #080c14 background */}
