@@ -13,7 +13,8 @@ import {
 } from "lucide-react";
 import { useCart } from "@/app/contexts/CartContext";
 import { useState, useRef, useEffect } from "react";
-import { services, rdServices } from "@/app/components/ServicesSection";
+import { services } from "@/app/components/ServicesSection";
+import { rdServices } from "@/lib/servicesData";
 import { usePathname } from "next/navigation";
 import { client } from "@/lib/sanity";
 
