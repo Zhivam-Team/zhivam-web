@@ -9,7 +9,7 @@ import SiteShell from "@/app/components/SiteShell";
 
 export const metadata: Metadata = {
     title: "Zhivam Web",
-    description: "A next-gen service ordering platform",
+    description: "A next-gen Thermal Solutions provider",
     icons: {
         icon: "app/zhivam.ico",
     },
