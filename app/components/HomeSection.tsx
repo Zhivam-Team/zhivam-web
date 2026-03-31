@@ -26,17 +26,17 @@ export default function Home() {
     };
 
     const itemVariants = {
-        hidden: { opacity: 0, filter: "blur(10px)", y: 20 },
-        visible: {
-            opacity: 1,
-            filter: "blur(0px)",
-            y: 0,
-            transition: {
-                duration: 0.8,
-                ease: "easeInOut" as const,
-            },
+    hidden: { opacity: 0, filter: "blur(10px)", y: 20 },
+    visible: {
+        opacity: 1,
+        filter: "blur(0px)",
+        y: 0,
+        transition: {
+            duration: 0.8,
+            ease: "easeInOut" as const, // Add 'as const' here
         },
-    };
+    },
+};
 
     const handleMouseMove = (event: React.MouseEvent<HTMLDivElement>) => {
         if (textRef.current) {
@@ -52,7 +52,8 @@ export default function Home() {
             {/* ====== Hero Section ====== */}
             <section
                 id="home"
-                className="relative min-h-svh flex flex-col justify-center md:flex-row md:items-center text-white overflow-hidden"
+                // Changed justify-center to justify-start to align content to the left
+                className="relative min-h-svh flex flex-col justify-center items-start text-white overflow-hidden"
             >
                 {/* Background grid texture */}
                 <div
@@ -68,10 +69,8 @@ export default function Home() {
 
                 {/* Left Side: Text Content */}
                 <motion.div
-                    // FIX: full-width on mobile, centred text + items on mobile
-                    // FIX: pt-28 on mobile to clear the fixed navbar; removed mb-10 (use pb instead)
-                    // FIX: px-5 on mobile for comfortable reading margins
-                    className="relative z-10 flex flex-col items-center md:items-start text-center md:text-left space-y-6 w-full md:max-w-xl pt-24 pb-8 md:pt-0 md:pb-0 px-5 md:pl-6 lg:pl-12"
+                    // Changed items-center to items-start and text-center to text-left for mobile
+                    className="relative z-10 flex flex-col items-start text-left space-y-6 w-full md:max-w-2xl pt-24 pb-8 md:pt-0 md:pb-0 px-6 md:pl-12 lg:pl-20"
                     variants={containerVariants}
                     initial="hidden"
                     animate="visible"
@@ -83,10 +82,9 @@ export default function Home() {
                         onMouseEnter={() => setIsHovered(true)}
                         onMouseLeave={() => setIsHovered(false)}
                         onMouseMove={handleMouseMove}
-                        className="pt-2 md:pt-3 cursor-default w-full"
+                        className="pt-2 md:pt-3 cursor-default"
                         style={{
                             display: "grid",
-                            // FIX: clamp min bumped down to 220px so it fits narrow phones (320px wide)
                             width: "clamp(220px, 38vw, 560px)",
                             height: "clamp(64px, 11vw, 160px)",
                         }}
@@ -100,10 +98,10 @@ export default function Home() {
                                 width: "100%",
                                 height: "100%",
                                 objectFit: "contain",
-                                // FIX: centre on mobile, left-align on desktop
-                                objectPosition: "center center",
+                                // Forced left alignment for the logo image
+                                objectPosition: "left center",
                             }}
-                            className="select-none md:[object-position:left_center]"
+                            className="select-none"
                             draggable={false}
                         />
 
@@ -120,12 +118,13 @@ export default function Home() {
                                 maskSize: "contain",
                                 WebkitMaskRepeat: "no-repeat",
                                 maskRepeat: "no-repeat",
-                                WebkitMaskPosition: "center center",
-                                maskPosition: "center center",
+                                // Forced left alignment for the mask
+                                WebkitMaskPosition: "left center",
+                                maskPosition: "left center",
                             }}
                             initial={{ opacity: 0 }}
                             animate={{ opacity: isHovered ? 1 : 0 }}
-                            transition={{ duration: 0.4, ease: "easeInOut" as const }}
+                            transition={{ duration: 0.4, ease: "easeInOut" }}
                             aria-hidden="true"
                         />
                     </motion.div>
@@ -133,19 +132,18 @@ export default function Home() {
                     {/* CTAs */}
                     <motion.div
                         variants={itemVariants}
-                        // FIX: remove clamp paddingLeft on mobile (looks off-centre); apply only md+
-                        className="flex items-center gap-3 md:gap-4 pt-2 md:[padding-left:clamp(20px,3vw,50px)]"
+                        // Removed the complex clamp padding to keep it naturally aligned to the left
+                        className="flex items-center gap-3 md:gap-4 pt-2"
                     >
                         <Link
                             href="/servicesoffered"
-                            // FIX: slightly smaller px/py on very small screens
-                            className="flex items-center gap-2 bg-cyan-500 hover:bg-cyan-400 text-black font-semibold text-sm px-4 py-2.5 md:px-5 md:py-3 rounded-xl transition-colors duration-200"
+                            className="flex items-center gap-2 bg-cyan-500 hover:bg-cyan-400 text-black font-semibold text-sm px-4 py-2.5 md:px-6 md:py-3 rounded-xl transition-colors duration-200"
                         >
                             Explore Services <ArrowUpRight className="w-4 h-4" />
                         </Link>
                         <Link
                             href="/contact"
-                            className="text-sm text-slate-400 hover:text-white border border-slate-700 hover:border-slate-500 px-4 py-2.5 md:px-5 md:py-3 rounded-xl transition-colors duration-200"
+                            className="text-sm text-slate-400 hover:text-white border border-slate-700 hover:border-slate-500 px-4 py-2.5 md:px-6 md:py-3 rounded-xl transition-colors duration-200"
                         >
                             Contact Us
                         </Link>
@@ -171,41 +169,29 @@ export default function Home() {
                         draggable={false}
                     />
 
-                    {/* Cinematic left fade — stronger on mobile, subtle on desktop */}
+                    {/* Cinematic left fade */}
                     <div
                         className="absolute inset-0 pointer-events-none"
                         style={{
                             background: `linear-gradient(
                                 to right,
                                 #080c14 0%,
-                                #080c14 18%,
-                                #080c14cc 28%,
-                                #080c1499 38%,
-                                transparent 50%
+                                #080c14 25%,
+                                #080c14cc 40%,
+                                transparent 70%
                             )`,
                         }}
                     />
-                    {/* FIX: full dark overlay on mobile so text is always readable */}
-                    <div className="md:hidden absolute inset-0 bg-[#080c14]/60 pointer-events-none" />
+                    <div className="md:hidden absolute inset-0 bg-[#080c14]/40 pointer-events-none" />
 
                     {/* Bottom fade */}
                     <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-[#080c14] to-transparent pointer-events-none" />
-
-                    {/* FIX: extra top fade on mobile so navbar area stays dark */}
-                    <div className="md:hidden absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-[#080c14] to-transparent pointer-events-none" />
                 </div>
             </section>
 
-            {/* ====== About Section ====== */}
             <AboutSection />
-
-            {/* ====== Logo Section ====== */}
             <LogoSection />
-
-            {/* ====== Founder Section ====== */}
             <FoundersSection />
-
-            {/* ====== Team Section ====== */}
             <TeamSection />
         </main>
     );

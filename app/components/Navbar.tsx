@@ -333,7 +333,7 @@ export default function Navbar() {
 
                     <Link
                         href="/login"
-                        className="hidden md:flex items-center gap-1.5 bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/20 hover:border-cyan-400/60 rounded-full px-4 py-2 text-sm font-medium transition-all duration-200 pointer-events-none opacity-50"
+                        className="hidden md:flex items-center gap-1.5 bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/20 hover:border-cyan-400/60 rounded-full px-4 py-2 text-sm font-medium transition-all duration-200"
                     >
                         Login <ArrowRight className="w-3.5 h-3.5" />
                     </Link>

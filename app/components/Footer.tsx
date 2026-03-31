@@ -31,13 +31,13 @@ export default function Footer() {
                             PRODUCTS
                         </h3>
                         <ul className="space-y-3 text-sm">
-                            <li><Link href="#" className="hover:text-white transition-colors">Batteries</Link></li>
-                            <li><Link href="#" className="hover:text-white transition-colors">Battery Thermal Runaway Protection</Link></li>
-                            <li><Link href="#" className="hover:text-white transition-colors">Battery Components</Link></li>
-                            <li><Link href="#" className="hover:text-white transition-colors">Lithium-ion Cells</Link></li>
-                            <li><Link href="#" className="hover:text-white transition-colors">Safe Storage Solutions</Link></li>
+                            <li>Heat Sinks</li>
+                            <li>Cold Plates</li>
+                            <li>Vapor Chambers</li>
+                            <li>Phase Change Materials</li>
+                            {/* <li><Link href="#" className="hover:text-white transition-colors">Safe Storage Solutions</Link></li>
                             <li><Link href="#" className="hover:text-white transition-colors">Thermal Solutions</Link></li>
-                            <li><Link href="#" className="hover:text-white transition-colors">Xero Vibe™ Fan</Link></li>
+                            <li><Link href="#" className="hover:text-white transition-colors">Xero Vibe™ Fan</Link></li> */}
                         </ul>
                     </div>
 
@@ -47,11 +47,12 @@ export default function Footer() {
                             SERVICES
                         </h3>
                         <ul className="space-y-3 text-sm">
-                            <li><Link href="#" className="hover:text-white transition-colors">Custom Battery Solutions</Link></li>
-                            <li><Link href="#" className="hover:text-white transition-colors">Electrical Testing</Link></li>
-                            <li><Link href="#" className="hover:text-white transition-colors">Abuse Testing & Calorimetry</Link></li>
-                            <li><Link href="#" className="hover:text-white transition-colors">Simulation & Analysis</Link></li>
-                            <li><Link href="#" className="hover:text-white transition-colors">Rotary System Vibration Reduction</Link></li>
+                            <li><Link href="/servicesoffered/rd-1" className="hover:text-white transition-colors">Electronic Thermal Management</Link></li>
+                            <li><Link href="/servicesoffered/rd-3" className="hover:text-white transition-colors">Battery Thermal Management and Testing</Link></li>
+                            <li><Link href="/servicesoffered/rd-4" className="hover:text-white transition-colors">Immersion Cooling Solutions</Link></li>
+                            <li><Link href="/servicesoffered/rd-5" className="hover:text-white transition-colors">PCB Design, Prototyping & Thermal Testing</Link></li>
+                            <li><Link href="/servicesoffered/rd-6" className="hover:text-white transition-colors">Renewable Energy & Sustainability Solutions</Link></li>
+                            <li><Link href="/servicesoffered/rd-2" className="hover:text-white transition-colors">Design, Simulation, Prototyping & Testing</Link></li>
                         </ul>
                     </div>
 
@@ -61,18 +62,20 @@ export default function Footer() {
                             COMPANY
                         </h3>
                         <ul className="space-y-3 text-sm">
-                            <li><Link href="#" className="hover:text-white transition-colors">Leadership</Link></li>
+                            {/* <li><Link href="#" className="hover:text-white transition-colors">Leadership</Link></li>
                             <li><Link href="#" className="hover:text-white transition-colors">Careers</Link></li>
                             <li><Link href="#" className="hover:text-white transition-colors">News</Link></li>
-                            <li><Link href="#" className="hover:text-white transition-colors">FAQs</Link></li>
-                            <li><Link href="#" className="hover:text-white transition-colors">Terms & Conditions</Link></li>
-                            <li><Link href="#" className="hover:text-white transition-colors">Privacy Policy</Link></li>
+                            <li><Link href="#" className="hover:text-white transition-colors">FAQs</Link></li> */}
+                            <li><Link href="/terms" className="hover:text-white transition-colors">Terms & Conditions</Link></li>
+                            <li><Link href="/privacy-policy" className="hover:text-white transition-colors">Privacy Policy</Link></li>
+                            <li><Link href="/refund-policy" className="hover:text-white transition-colors">Refund Policy</Link></li>
+                            <li><Link href="/shipping-delivery" className="hover:text-white transition-colors">Shipping & Delivery</Link></li>
                             <li><Link href="/blog" className="hover:text-white transition-colors">Blog</Link></li>
                             <li><Link href="/contact" className="hover:text-white transition-colors">Contact</Link></li>
                         </ul>
                     </div>
 
-                    {/* INVESTORS */}
+                    {/* INVESTORS
                     <div className="md:pl-10">
                         <h3 className="text-xs tracking-widest text-slate-500 mb-5 md:mb-6">
                             INVESTORS
@@ -83,7 +86,7 @@ export default function Footer() {
                             <li><Link href="#" className="hover:text-white transition-colors">SEC & Stock Information</Link></li>
                             <li><Link href="#" className="hover:text-white transition-colors">Governance Documents</Link></li>
                         </ul>
-                    </div>
+                    </div> */}
                 </div>
 
                 {/* DIVIDER + ADDRESSES */}

@@ -10,15 +10,6 @@ const fadeUp = (delay = 0) => ({
 
 const SocialLinks = () => {
     const socials = [
-        // {
-        //     name: "Twitter / X",
-        //     href: "https://twitter.com",
-        //     icon: (
-        //         <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
-        //             <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.746l7.73-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-        //         </svg>
-        //     ),
-        // },
         {
             name: "Instagram",
             href: "https://www.instagram.com/zhivam.tech/",
@@ -60,12 +51,73 @@ const SocialLinks = () => {
     );
 };
 
+// SVG icon helpers matching the HTML's office card icons
+const IconLocation = () => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+        <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z" />
+        <circle cx="12" cy="10" r="3" />
+    </svg>
+);
+
+const IconPhone = () => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+        <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.44 2 2 0 0 1 3.58 1h3a2 2 0 0 1 2 1.72c.13.96.37 1.9.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.96a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.33 1.85.57 2.81.7A2 2 0 0 1 22 16.92z" />
+    </svg>
+);
+
+const IconMail = () => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+        <polyline points="22,6 12,13 2,6" />
+    </svg>
+);
+
+const IconClock = () => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+        <circle cx="12" cy="12" r="10" />
+        <polyline points="12 6 12 12 16 14" />
+    </svg>
+);
+
+const InfoRow = ({
+    icon,
+    label,
+    children,
+}: {
+    icon: React.ReactNode;
+    label: string;
+    children: React.ReactNode;
+}) => (
+    <div className="flex gap-3 items-start mb-5 last:mb-0">
+        <div className="w-9 h-9 rounded-lg bg-cyan-400/10 flex items-center justify-center flex-shrink-0 text-cyan-400">
+            {icon}
+        </div>
+        <div>
+            <div className="text-[10px] font-semibold uppercase tracking-widest text-slate-500 mb-1">{label}</div>
+            <div className="text-sm text-slate-300 leading-relaxed">{children}</div>
+        </div>
+    </div>
+);
+
+const SERVICE_OPTIONS = [
+    "Electronic Thermal Management",
+    "Battery Thermal Management & Testing",
+    "Immersion Cooling Solutions",
+    "PCB Design, Prototyping & Thermal Testing",
+    "Design, Simulation, Prototyping & Testing",
+    "Renewable Energy & Sustainability Solutions",
+    "Consultancy & Technical Advisory",
+    "IP Licensing & Industry Collaboration",
+    "Other",
+];
+
 export default function ContactPage() {
     const [name, setName] = useState("")
     const [email, setEmail] = useState("")
     const [phone, setPhone] = useState("")
     const [company, setCompany] = useState("")
     const [location, setLocation] = useState("")
+    const [service, setService] = useState("")
     const [message, setMessage] = useState("")
     const [emailError, setEmailError] = useState("")
     const [phoneError, setPhoneError] = useState("")
@@ -102,7 +154,7 @@ export default function ContactPage() {
             const res = await fetch('/api/contact', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name, email, phone, company, location, message, marketingConsent })
+                body: JSON.stringify({ name, email, phone, company, location, service, message, marketingConsent })
             })
 
             if (res.ok) {
@@ -112,6 +164,7 @@ export default function ContactPage() {
                 setPhone("")
                 setCompany("")
                 setLocation("")
+                setService("")
                 setMessage("")
             } else {
                 setSubmitStatus('error')
@@ -149,26 +202,31 @@ export default function ContactPage() {
 
             <div className="relative w-full max-w-5xl flex flex-col lg:flex-row gap-16 items-start">
 
-                {/* LEFT */}
-                <div className="flex-1 lg:sticky lg:top-28">
-                    <motion.div {...fadeUp(0)} className="inline-flex items-center gap-2 text-xs font-medium text-cyan-400 bg-cyan-400/10 border border-cyan-400/20 rounded-full px-3 py-1 mb-6">
-                        <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
-                        Available for projects
-                    </motion.div>
+                {/* ── LEFT PANEL ── */}
+                <div className="flex-1 lg:sticky lg:top-28 space-y-0">
 
-                    <motion.h1 {...fadeUp(0.1)} className="text-5xl md:text-6xl font-bold tracking-tight leading-none">
-                        Let&apos;s <br />
-                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-indigo-400">
-                            work together
-                        </span>
-                    </motion.h1>
+                    {/* Headline block */}
+                    <div>
+                        <motion.div {...fadeUp(0)} className="inline-flex items-center gap-2 text-xs font-medium text-cyan-400 bg-cyan-400/10 border border-cyan-400/20 rounded-full px-3 py-1 mb-6">
+                            <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+                            Available for projects
+                        </motion.div>
 
-                    <motion.p {...fadeUp(0.2)} className="text-slate-400 mt-5 text-base leading-relaxed max-w-xs">
-                        Have a project or question? Drop us a message and we&apos;ll get back to you within 24 hours.
-                    </motion.p>
+                        <motion.h1 {...fadeUp(0.1)} className="text-5xl md:text-6xl font-bold tracking-tight leading-none">
+                            Let&apos;s <br />
+                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-indigo-400">
+                                work together
+                            </span>
+                        </motion.h1>
 
-                    <SocialLinks />
+                        <motion.p {...fadeUp(0.2)} className="text-slate-400 mt-5 text-base leading-relaxed max-w-xs">
+                            Have a project or question? Drop us a message and we&apos;ll get back to you within 24 hours.
+                        </motion.p>
 
+                        <SocialLinks />
+                    </div>
+
+                    {/* Quick contact row */}
                     <motion.div {...fadeUp(0.8)} className="mt-10 pt-10 border-t border-slate-800 space-y-3">
                         {[
                             { label: "Email", value: "info@zhivam.com" },
@@ -181,9 +239,70 @@ export default function ContactPage() {
                             </div>
                         ))}
                     </motion.div>
+
+                    {/* ── Office Cards ── */}
+                    <motion.div {...fadeUp(1.0)} className="mt-10 space-y-4">
+
+                        {/* Vijayawada HQ */}
+                        <div className="rounded-2xl border border-slate-700/60 bg-slate-900/40 p-5">
+                            <div className="text-[10px] font-semibold uppercase tracking-widest text-cyan-400 mb-1">Headquarters</div>
+                            <h3 className="text-sm font-semibold text-white mb-4">Vijayawada Office</h3>
+
+                            <InfoRow icon={<IconLocation />} label="Registered Address">
+                                9-65-41/A Sykamvari Street, I Floor,<br />
+                                Kothapet, Chittinagar,<br />
+                                Vijayawada (Urban), Krishna — 520001<br />
+                                Andhra Pradesh, India
+                            </InfoRow>
+
+                            <InfoRow icon={<IconPhone />} label="Phone">
+                                <a href="tel:+918333850202" className="hover:text-cyan-400 transition-colors">+91 833 385 0202</a>
+                            </InfoRow>
+
+                            <InfoRow icon={<IconMail />} label="Email">
+                                <a href="mailto:support@zhivam.com" className="hover:text-cyan-400 transition-colors">support@zhivam.com</a><br />
+                                <a href="mailto:info@zhivam.com" className="hover:text-cyan-400 transition-colors">info@zhivam.com</a>
+                            </InfoRow>
+                        </div>
+
+                        {/* Kattankulathur Branch */}
+                        <div className="rounded-2xl border border-slate-700/60 bg-slate-900/40 p-5">
+                            <div className="text-[10px] font-semibold uppercase tracking-widest text-cyan-400 mb-1">Branch Office</div>
+                            <h3 className="text-sm font-semibold text-white mb-4">Kattankulathur Office</h3>
+
+                            <InfoRow icon={<IconLocation />} label="Branch Address">
+                                Second Floor, Center For Electric Mobility,<br />
+                                Potheri, SRM Nagar,<br />
+                                Kattankulathur — 603203<br />
+                                Tamil Nadu, India
+                            </InfoRow>
+
+                            <InfoRow icon={<IconClock />} label="Business Hours">
+                                Mon – Fri: 9:00 AM – 6:00 PM IST<br />
+                                Saturday: 10:00 AM – 2:00 PM IST
+                            </InfoRow>
+
+                            {/* Service badges
+                            <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-slate-700/50">
+                                {["⚡ Thermal Engineering", "🔋 Battery Systems", "📐 Simulation", "🌱 Renewables"].map((badge) => (
+                                    <span key={badge} className="text-[11px] font-medium text-cyan-400 bg-cyan-400/10 border border-cyan-400/20 rounded-full px-2.5 py-1">
+                                        {badge}
+                                    </span>
+                                ))}
+                            </div> */}
+
+                            {/* Legal notice */}
+                            <div className="mt-4 rounded-xl border-l-2 border-cyan-400/50 bg-cyan-400/5 px-4 py-3 text-xs text-slate-400 leading-relaxed">
+                                <span className="text-cyan-400 font-semibold">Note for Clients: </span>
+                                For billing disputes, refund requests, or legal correspondence, please write to{" "}
+                                <a href="mailto:info@zhivam.com" className="text-cyan-400 hover:underline">info@zhivam.com</a>{" "}
+                                quoting your order/project ID.
+                            </div>
+                        </div>
+                    </motion.div>
                 </div>
 
-                {/* FORM */}
+                {/* ── FORM ── */}
                 <motion.form
                     onSubmit={handleSubmit}
                     variants={stagger}
@@ -278,6 +397,30 @@ export default function ContactPage() {
                         />
                     </motion.div>
 
+                    {/* Service of Interest */}
+                    <motion.div variants={fadeUp(0)}>
+                        <label className="block text-xs font-medium text-slate-400 mb-2 uppercase tracking-wider">
+                            Service of Interest <span className="text-red-400">*</span>
+                        </label>
+                        <select
+                            required
+                            value={service}
+                            onChange={(e) => setService(e.target.value)}
+                            onFocus={() => setFocused("service")}
+                            onBlur={() => setFocused(null)}
+                            className={`${inputClass("service")} appearance-none cursor-pointer`}
+                        >
+                            <option value="" disabled className="bg-slate-900 text-slate-500">
+                                Select a service…
+                            </option>
+                            {SERVICE_OPTIONS.map((opt) => (
+                                <option key={opt} value={opt} className="bg-slate-900 text-white">
+                                    {opt}
+                                </option>
+                            ))}
+                        </select>
+                    </motion.div>
+
                     {/* Message */}
                     <motion.div variants={fadeUp(0)}>
                         <label className="block text-xs font-medium text-slate-400 mb-2 uppercase tracking-wider">
@@ -337,6 +480,11 @@ export default function ContactPage() {
                             {isSubmitting ? 'Sending...' : 'Send Message →'}
                         </motion.button>
 
+                        <p className="text-xs text-slate-500 text-center">
+                            We respond within 1–2 business days. Your data is handled per our{" "}
+                            <a href="/privacy-policy" className="text-cyan-400 hover:underline">Privacy Policy</a>.
+                        </p>
+
                         {/* Success message */}
                         {submitStatus === 'success' && (
                             <motion.div
@@ -344,7 +492,7 @@ export default function ContactPage() {
                                 animate={{ opacity: 1, y: 0 }}
                                 className="flex items-center gap-2 text-sm text-green-400 bg-green-400/10 border border-green-400/20 rounded-xl px-4 py-3"
                             >
-                                <span>✓</span> Message sent! We'll get back to you within 24 hours.
+                                <span>✓</span> Message sent! We&apos;ll get back to you within 24 hours.
                             </motion.div>
                         )}
 
