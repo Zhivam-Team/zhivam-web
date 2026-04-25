@@ -66,7 +66,7 @@ export default function TeamSection() {
     };
 
     return (
-        <section className="relative py-24 px-4 md:px-8 bg-[#080c14] overflow-hidden">
+        <section className="relative py-16 sm:py-20 md:py-24 px-4 md:px-8 bg-[#080c14] overflow-hidden">
 
             {/* Background grid texture */}
             <div
@@ -88,7 +88,7 @@ export default function TeamSection() {
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     transition={{ duration: 0.6, ease: "easeOut" as const }}
-                    className="mb-14"
+                    className="mb-10 md:mb-14"
                 >
                     <div className="flex items-center gap-3 mb-4">
                         <span className="h-px w-8 bg-cyan-500" />
@@ -97,7 +97,7 @@ export default function TeamSection() {
                         </span>
                     </div>
                     <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
-                        <h2 className="text-4xl md:text-5xl font-bold text-white leading-tight">
+                        <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white leading-tight">
                             Our Team
                         </h2>
                         {/* <p className="text-slate-400 text-sm max-w-sm leading-relaxed md:text-right">
@@ -133,7 +133,7 @@ export default function TeamSection() {
                                 opacity: { duration: 0.5, delay: index * 0.08 },
                                 y: { duration: 0.5, delay: index * 0.08 },
                             }}
-                            className={`team-card relative bg-[#0d1520] border border-slate-700/60 rounded-2xl p-6 flex flex-col items-center text-center w-full hover:border-cyan-500/40 transition-colors duration-300 col-span-1 lg:col-span-2 ${index === 3 ? "lg:col-start-2" : ""
+                            className={`team-card relative bg-[#0d1520] border border-slate-700/60 rounded-2xl p-5 sm:p-6 flex flex-col items-center text-center w-full hover:border-cyan-500/40 transition-colors duration-300 col-span-1 lg:col-span-2 ${index === 3 ? "lg:col-start-2" : ""
                                 }`}
                         >
 
@@ -148,14 +148,9 @@ export default function TeamSection() {
                                 <LinkedInIcon />
                             </a>
 
-                            {/* Hexagon image */}
-                            <motion.div layout className="mt-4 relative w-32 h-32 group">
-                                <div
-                                    className="w-full h-full relative overflow-hidden"
-                                    style={{
-                                        clipPath: "polygon(25% 6%, 75% 6%, 100% 50%, 75% 94%, 25% 94%, 0% 50%)"
-                                    }}
-                                >
+                            {/* Profile image */}
+                            <motion.div layout className="mt-4 relative w-28 h-28 sm:w-32 sm:h-32 group">
+                                <div className="w-full h-full relative overflow-hidden rounded-full">
                                     <img
                                         src={member.image}
                                         alt={member.name}
@@ -163,7 +158,6 @@ export default function TeamSection() {
                                         decoding="async"
                                         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 opacity-90"
                                     />
-                                    {/* Cyan hex border overlay */}
                                     <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
                                         style={{
                                             background: "linear-gradient(135deg, rgba(34,211,238,0.15), transparent)"

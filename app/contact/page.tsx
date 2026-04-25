@@ -192,7 +192,7 @@ export default function ContactPage() {
     };
 
     return (
-        <main className="min-h-screen bg-[#080c14] text-white flex items-start justify-center px-6 pt-28 pb-20 overflow-hidden">
+        <main className="min-h-screen bg-[#080c14] text-white flex items-start justify-center px-4 sm:px-6 pt-24 sm:pt-28 pb-16 sm:pb-20 overflow-hidden">
 
             {/* Background glow */}
             <div className="pointer-events-none fixed inset-0 overflow-hidden">
@@ -200,7 +200,7 @@ export default function ContactPage() {
                 <div className="absolute bottom-0 right-0 w-[400px] h-[400px] rounded-full bg-indigo-500/5 blur-[100px]" />
             </div>
 
-            <div className="relative w-full max-w-5xl flex flex-col lg:flex-row gap-16 items-start">
+            <div className="relative w-full max-w-5xl flex flex-col lg:flex-row gap-10 lg:gap-16 items-start">
 
                 {/* ── LEFT PANEL ── */}
                 <div className="flex-1 lg:sticky lg:top-28 space-y-0">
@@ -212,14 +212,14 @@ export default function ContactPage() {
                             Available for projects
                         </motion.div>
 
-                        <motion.h1 {...fadeUp(0.1)} className="text-5xl md:text-6xl font-bold tracking-tight leading-none">
+                        <motion.h1 {...fadeUp(0.1)} className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight leading-none">
                             Let&apos;s <br />
                             <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-indigo-400">
                                 work together
                             </span>
                         </motion.h1>
 
-                        <motion.p {...fadeUp(0.2)} className="text-slate-400 mt-5 text-base leading-relaxed max-w-xs">
+                        <motion.p {...fadeUp(0.2)} className="text-slate-400 mt-5 text-sm sm:text-base leading-relaxed max-w-xs">
                             Have a project or question? Drop us a message and we&apos;ll get back to you within 24 hours.
                         </motion.p>
 
@@ -234,8 +234,8 @@ export default function ContactPage() {
                             { label: "Based in", value: "India" },
                         ].map((item) => (
                             <div key={item.label} className="flex items-center gap-3 text-sm">
-                                <span className="text-slate-500 w-16">{item.label}</span>
-                                <span className="text-slate-300">{item.value}</span>
+                                <span className="text-slate-500 w-16 shrink-0">{item.label}</span>
+                                <span className="text-slate-300 break-words">{item.value}</span>
                             </div>
                         ))}
                     </motion.div>
@@ -244,7 +244,7 @@ export default function ContactPage() {
                     <motion.div {...fadeUp(1.0)} className="mt-10 space-y-4">
 
                         {/* Vijayawada HQ */}
-                        <div className="rounded-2xl border border-slate-700/60 bg-slate-900/40 p-5">
+                        <div className="rounded-2xl border border-slate-700/60 bg-slate-900/40 p-4 sm:p-5">
                             <div className="text-[10px] font-semibold uppercase tracking-widest text-cyan-400 mb-1">Headquarters</div>
                             <h3 className="text-sm font-semibold text-white mb-4">Vijayawada Office</h3>
 
@@ -266,7 +266,7 @@ export default function ContactPage() {
                         </div>
 
                         {/* Kattankulathur Branch */}
-                        <div className="rounded-2xl border border-slate-700/60 bg-slate-900/40 p-5">
+                        <div className="rounded-2xl border border-slate-700/60 bg-slate-900/40 p-4 sm:p-5">
                             <div className="text-[10px] font-semibold uppercase tracking-widest text-cyan-400 mb-1">Branch Office</div>
                             <h3 className="text-sm font-semibold text-white mb-4">Kattankulathur Office</h3>
 
@@ -308,7 +308,7 @@ export default function ContactPage() {
                     variants={stagger}
                     initial="initial"
                     animate="animate"
-                    className="flex-1 w-full space-y-5"
+                    className="flex-1 w-full space-y-5 rounded-2xl border border-slate-800/80 bg-slate-950/20 p-4 sm:p-0 sm:border-0 sm:bg-transparent"
                 >
                     {/* Name */}
                     <motion.div variants={fadeUp(0)}>
@@ -328,7 +328,7 @@ export default function ContactPage() {
                     </motion.div>
 
                     {/* Email + Phone */}
-                    <motion.div variants={fadeUp(0)} className="grid md:grid-cols-2 gap-4">
+                    <motion.div variants={fadeUp(0)} className="grid sm:grid-cols-2 gap-4">
                         <div>
                             <label className="block text-xs font-medium text-slate-400 mb-2 uppercase tracking-wider">
                                 Email <span className="text-red-400">*</span>

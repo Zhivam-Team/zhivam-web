@@ -11,7 +11,7 @@ export default function SiteShell({ children }: { children: React.ReactNode }) {
     return (
         <>
             {!isAdmin && <Navbar />}
-            <main>{children}</main>
+            <main className="overflow-x-hidden">{children}</main>
             {!isAdmin && <ConditionalFooter />}
             {!isAdmin && <FloatingContactButton />}
         </>

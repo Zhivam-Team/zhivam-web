@@ -2,15 +2,16 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, ArrowUpRight, CheckCircle2, Mail } from "lucide-react";
 import { rdServices, RdService } from "@/lib/servicesData";
+import type { Metadata } from "next";
 
 const tagColors: Record<string, string> = {
-    "Core Service": "text-cyan-400 bg-cyan-400/10 border-cyan-400/20",
-    "Battery": "text-green-400 bg-green-400/10 border-green-400/20",
-    "Cooling": "text-blue-400 bg-blue-400/10 border-blue-400/20",
-    "PCB": "text-purple-400 bg-purple-400/10 border-purple-400/20",
-    "Renewable": "text-amber-400 bg-amber-400/10 border-amber-400/20",
-    "Advisory": "text-orange-400 bg-orange-400/10 border-orange-400/20",
-    "IP & Licensing": "text-pink-400 bg-pink-400/10 border-pink-400/20",
+    "Core Service": "text-cyan-100 bg-cyan-500/20 border-cyan-400/30",
+    "Battery": "text-cyan-100 bg-cyan-500/20 border-cyan-400/30",
+    "Cooling": "text-cyan-100 bg-cyan-500/20 border-cyan-400/30",
+    "PCB": "text-cyan-100 bg-cyan-500/20 border-cyan-400/30",
+    "Renewable": "text-cyan-100 bg-cyan-500/20 border-cyan-400/30",
+    "Advisory": "text-cyan-100 bg-cyan-500/20 border-cyan-400/30",
+    "IP & Licensing": "text-cyan-100 bg-cyan-500/20 border-cyan-400/30",
 };
 
 const caseStudies: Record<string, { title: string; outcome: string }[]> = {
@@ -52,6 +53,36 @@ export function generateStaticParams() {
     return rdServices.map((s: RdService) => ({ id: s.id }));
 }
 
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+    const { id } = await params;
+    const service = rdServices.find((s: RdService) => s.id === id);
+
+    if (!service) {
+        return {
+            title: "Service Not Found",
+            robots: { index: false, follow: false },
+        };
+    }
+
+    return {
+        title: service.title,
+        description: service.description,
+        alternates: { canonical: `/servicesoffered/${service.id}` },
+        openGraph: {
+            title: `${service.title} | Zhivam`,
+            description: service.description,
+            url: `/servicesoffered/${service.id}`,
+            images: [{ url: service.imageUrl, alt: service.title }],
+        },
+        twitter: {
+            card: "summary_large_image",
+            title: `${service.title} | Zhivam`,
+            description: service.description,
+            images: [service.imageUrl],
+        },
+    };
+}
+
 export default async function ServiceDetailPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
     const service = rdServices.find((s: RdService) => s.id === id);
@@ -72,23 +103,23 @@ export default async function ServiceDetailPage({ params }: { params: Promise<{ 
             />
             <div className="pointer-events-none absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[300px] bg-cyan-500/5 blur-[100px] rounded-full" />
 
-            <div className="relative pt-28 pb-16 px-4 md:px-8">
+            <div className="relative pt-24 sm:pt-28 pb-12 sm:pb-16 px-4 md:px-8">
                 <div className="max-w-screen-xl mx-auto">
 
-                    <Link href="/servicesoffered" className="inline-flex items-center gap-2 text-slate-400 hover:text-cyan-400 transition-colors text-sm mb-10 group">
+                    <Link href="/servicesoffered" className="inline-flex items-center gap-2 text-slate-400 hover:text-cyan-400 transition-colors text-sm mb-8 sm:mb-10 group">
                         <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
                         All Services
                     </Link>
 
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
                         <div>
                             <span className={`inline-block text-[10px] font-mono uppercase tracking-widest border rounded-full px-3 py-1 mb-6 ${tagColors[service.tag] || tagColors["Core Service"]}`}>
                                 {service.tag}
                             </span>
-                            <h1 className="text-4xl md:text-5xl font-bold text-white leading-tight mb-6">
+                            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white leading-tight mb-5 sm:mb-6">
                                 {service.title}
                             </h1>
-                            <p className="text-slate-400 text-base leading-relaxed mb-8">
+                            <p className="text-slate-400 text-sm sm:text-base leading-relaxed mb-7 sm:mb-8">
                                 {service.description}
                             </p>
                             <Link
@@ -100,7 +131,7 @@ export default async function ServiceDetailPage({ params }: { params: Promise<{ 
                             </Link>
                         </div>
 
-                        <div className="relative h-72 md:h-96 rounded-2xl overflow-hidden border border-slate-700/60">
+                        <div className="relative h-60 sm:h-72 md:h-96 rounded-2xl overflow-hidden border border-slate-700/60">
                             <img
                                 src={service.imageUrl}
                                 alt={service.title}
@@ -154,14 +185,14 @@ export default async function ServiceDetailPage({ params }: { params: Promise<{ 
 
             <div className="px-4 md:px-8 py-16 border-t border-slate-800">
                 <div className="max-w-screen-xl mx-auto">
-                    <div className="bg-[#0d1520] border border-cyan-500/20 rounded-2xl p-10 flex flex-col md:flex-row items-center justify-between gap-6 hover:border-cyan-500/40 transition-colors">
+                    <div className="bg-[#0d1520] border border-cyan-500/20 rounded-2xl p-6 sm:p-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 hover:border-cyan-500/40 transition-colors">
                         <div>
                             <h2 className="text-2xl font-bold text-white mb-2">Ready to get started?</h2>
                             <p className="text-slate-400 text-sm">Tell us about your project and we will get back to you within 24 hours.</p>
                         </div>
                         <Link
                             href="/contact"
-                            className="inline-flex items-center gap-2 bg-cyan-500 hover:bg-cyan-400 text-black font-semibold text-sm px-8 py-3.5 rounded-full transition-all duration-200 hover:shadow-[0_0_24px_rgba(6,182,212,0.4)] whitespace-nowrap"
+                            className="inline-flex w-full sm:w-auto items-center justify-center gap-2 bg-cyan-500 hover:bg-cyan-400 text-black font-semibold text-sm px-8 py-3.5 rounded-full transition-all duration-200 hover:shadow-[0_0_24px_rgba(6,182,212,0.4)] whitespace-nowrap"
                         >
                             Contact Us
                             <ArrowUpRight className="w-4 h-4" />
@@ -186,9 +217,9 @@ export default async function ServiceDetailPage({ params }: { params: Promise<{ 
                                         <img
                                             src={s.imageUrl}
                                             alt={s.title}
-                                            className="w-full h-full object-cover opacity-10 group-hover:opacity-20 transition-all duration-500"
+                                            className="w-full h-full object-cover opacity-25 group-hover:opacity-40 transition-all duration-500"
                                         />
-                                        <div className="absolute inset-0 bg-gradient-to-t from-[#0d1520] via-[#0d1520]/70 to-[#0d1520]/20" />
+                                        <div className="absolute inset-0 bg-gradient-to-t from-[#0d1520]/90 via-[#0d1520]/45 to-[#0d1520]/10" />
                                     </div>
                                     <div className="flex items-start justify-between mb-4 relative z-10">
                                         <span className={`text-[10px] font-mono uppercase tracking-widest border rounded-full px-2.5 py-1 ${tagColors[s.tag] || tagColors["Core Service"]}`}>

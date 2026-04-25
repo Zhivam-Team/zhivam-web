@@ -53,7 +53,7 @@ export default function Home() {
             <section
                 id="home"
                 // Changed justify-center to justify-start to align content to the left
-                className="relative min-h-svh flex flex-col justify-center items-start text-white overflow-hidden"
+                className="relative min-h-svh flex flex-col justify-center items-start text-white overflow-hidden pt-20 sm:pt-0"
             >
                 {/* Background grid texture */}
                 <div
@@ -70,7 +70,7 @@ export default function Home() {
                 {/* Left Side: Text Content */}
                 <motion.div
                     // Changed items-center to items-start and text-center to text-left for mobile
-                    className="relative z-10 flex flex-col items-start text-left space-y-6 w-full md:max-w-2xl pt-24 pb-8 md:pt-0 md:pb-0 px-6 md:pl-12 lg:pl-20"
+                    className="relative z-10 flex flex-col items-start text-left space-y-5 sm:space-y-6 w-full max-w-[38rem] md:max-w-2xl pt-14 pb-12 md:pt-0 md:pb-0 px-4 sm:px-6 md:pl-12 lg:pl-20"
                     variants={containerVariants}
                     initial="hidden"
                     animate="visible"
@@ -85,8 +85,8 @@ export default function Home() {
                         className="pt-2 md:pt-3 cursor-default"
                         style={{
                             display: "grid",
-                            width: "clamp(220px, 38vw, 560px)",
-                            height: "clamp(64px, 11vw, 160px)",
+                            width: "clamp(210px, 72vw, 560px)",
+                            height: "clamp(62px, 22vw, 160px)",
                         }}
                     >
                         {/* Base Image */}
@@ -133,17 +133,17 @@ export default function Home() {
                     <motion.div
                         variants={itemVariants}
                         // Removed the complex clamp padding to keep it naturally aligned to the left
-                        className="flex items-center gap-3 md:gap-4 pt-2"
+                        className="flex w-full flex-col sm:flex-row items-stretch sm:items-center gap-3 md:gap-4 pt-2"
                     >
                         <Link
                             href="/servicesoffered"
-                            className="flex items-center gap-2 bg-cyan-500 hover:bg-cyan-400 text-black font-semibold text-sm px-4 py-2.5 md:px-6 md:py-3 rounded-xl transition-colors duration-200"
+                            className="flex min-h-11 items-center justify-center gap-2 bg-cyan-500 hover:bg-cyan-400 text-black font-semibold text-sm px-4 py-2.5 md:px-6 md:py-3 rounded-xl transition-colors duration-200"
                         >
                             Explore Services <ArrowUpRight className="w-4 h-4" />
                         </Link>
                         <Link
                             href="/contact"
-                            className="text-sm text-slate-400 hover:text-white border border-slate-700 hover:border-slate-500 px-4 py-2.5 md:px-6 md:py-3 rounded-xl transition-colors duration-200"
+                            className="flex min-h-11 items-center justify-center text-sm text-slate-400 hover:text-white border border-slate-700 hover:border-slate-500 px-4 py-2.5 md:px-6 md:py-3 rounded-xl transition-colors duration-200"
                         >
                             Contact Us
                         </Link>
@@ -160,11 +160,11 @@ export default function Home() {
                 {/* HERO BACKGROUND IMAGE */}
                 <div className="absolute inset-0 z-0 overflow-hidden">
                     <img
-                        src="/images/HeroSection Image.webp"
+                        src="/images/Heat_Sink.png"
                         alt="Hero"
                         loading="eager"
                         decoding="async"
-                        className="absolute inset-0 w-full h-full object-cover object-center md:inset-auto md:right-0 md:top-1/2 md:-translate-y-1/2 md:h-[155%] md:w-auto md:object-contain opacity-40 md:opacity-80"
+                        className="absolute inset-0 w-full h-full object-cover object-center sm:object-[58%_center] md:inset-auto md:right-0 md:left-60 md:top-1/2 md:-translate-y-1/2 md:h-[155%] md:w-auto md:object-contain opacity-32 sm:opacity-45 md:opacity-80"
                         onContextMenu={(e) => e.preventDefault()}
                         draggable={false}
                     />
@@ -176,9 +176,9 @@ export default function Home() {
                             background: `linear-gradient(
                                 to right,
                                 #080c14 0%,
-                                #080c14 25%,
-                                #080c14cc 40%,
-                                transparent 70%
+                                #080c14 18%,
+                                #080c14dd 42%,
+                                transparent 82%
                             )`,
                         }}
                     />

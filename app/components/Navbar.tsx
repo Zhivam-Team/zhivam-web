@@ -11,9 +11,7 @@ import {
     FileText,
     Wrench,
 } from "lucide-react";
-import { useCart } from "@/app/contexts/CartContext";
 import { useState, useRef, useEffect } from "react";
-import { services } from "@/app/components/ServicesSection";
 import { rdServices } from "@/lib/servicesData";
 import { usePathname } from "next/navigation";
 import { client } from "@/lib/sanity";
@@ -32,10 +30,23 @@ type SearchResult = {
     category?: string;
 }
 
+const navItems = [
+    { name: "Home", href: "/" },
+    { name: "Solutions", href: "/servicesoffered" },
+    {
+        name: "Analyzer",
+        href: "/zheat",
+        dropdown: [
+            { name: "Heatsink", href: "/zheat" },
+            { name: "Coldplate", href: "/coming-soon" }
+        ]
+    },
+    { name: "Blog", href: "/blog" },
+    { name: "Contact", href: "/contact" },
+];
+
 export default function Navbar() {
-    const { cartCount, cartIconRef } = useCart();
     const pathname = usePathname();
-    if (pathname.startsWith('/studio')) return null;
 
     const [showSearch, setShowSearch] = useState(false);
     const [mobileOpen, setMobileOpen] = useState(false);
@@ -52,21 +63,6 @@ export default function Navbar() {
     const navbarRef = useRef<HTMLDivElement>(null);
     const navContainerRef = useRef<HTMLDivElement>(null);
     const linkRefs = useRef<Record<string, HTMLAnchorElement | null>>({});
-
-    const navItems = [
-        { name: "Home", href: "/" },
-        { name: "Solutions", href: "/servicesoffered" },
-        {
-            name: "Analyzer",
-            href: "/zheat",
-            dropdown: [
-                { name: "Heatsink", href: "/zheat" },
-                { name: "Coldplate", href: "/coming-soon" }
-            ]
-        },
-        { name: "Blog", href: "/blog" },
-        { name: "Contact", href: "/contact" },
-    ];
 
     // Fetch blog posts from Sanity on mount
     useEffect(() => {
@@ -192,6 +188,8 @@ export default function Navbar() {
         }, 150);
     };
 
+    if (pathname.startsWith('/studio')) return null;
+
     return (
         <>
             {/* BLUR OVERLAY */}
@@ -211,7 +209,7 @@ export default function Navbar() {
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ duration: 0.5, ease: "easeOut" as const }}
                 // FIX: reduced px on mobile (px-3 → px-6 on md+), tighter py on mobile
-                className="fixed top-4 left-1/2 -translate-x-1/2 w-[95%] max-w-screen-xl flex items-center justify-between px-3 md:px-6 py-1.5 md:py-2 bg-[#0d1520]/80 backdrop-blur-xl text-white z-50 border border-slate-700/60 rounded-full shadow-[0_4px_32px_rgba(0,0,0,0.4)]"
+                className="fixed top-3 sm:top-4 left-1/2 -translate-x-1/2 w-[calc(100%-1rem)] sm:w-[95%] max-w-screen-xl flex items-center justify-between px-3 md:px-6 py-1.5 md:py-2 bg-[#0d1520]/85 backdrop-blur-xl text-white z-50 border border-slate-700/60 rounded-full shadow-[0_4px_32px_rgba(0,0,0,0.4)]"
             >
                 {/* LEFT */}
                 <div className="flex items-center gap-2 md:gap-4">
@@ -311,7 +309,7 @@ export default function Navbar() {
                             setTimeout(() => searchRef.current?.focus(), 200);
                         }}
                         // FIX: larger tap target on mobile with p-1
-                        className="p-1 text-slate-400 hover:text-cyan-400 transition-colors"
+                        className="flex h-10 w-10 items-center justify-center rounded-full text-slate-400 hover:text-cyan-400 hover:bg-slate-800/70 transition-colors"
                         aria-label="Search"
                     >
                         <Search className="w-[18px] h-[18px]" />
@@ -323,7 +321,7 @@ export default function Navbar() {
                             setShowSearch(false);
                         }}
                         // FIX: larger tap target on mobile
-                        className="md:hidden p-1 text-slate-400 hover:text-white transition-colors"
+                        className="md:hidden flex h-10 w-10 items-center justify-center rounded-full text-slate-400 hover:text-white hover:bg-slate-800/70 transition-colors"
                         aria-label="Menu"
                     >
                         <motion.div animate={{ rotate: mobileOpen ? 180 : 0 }} transition={{ duration: 0.2 }}>
@@ -350,7 +348,7 @@ export default function Navbar() {
                     opacity: showSearch ? 1 : 0,
                 }}
                 transition={{ duration: 0.2, ease: "easeOut" as const }}
-                className="fixed top-[72px] md:top-[88px] left-1/2 -translate-x-1/2 w-[95%] md:w-[60%] lg:w-[46%] max-w-2xl overflow-hidden z-40"
+                className="fixed top-[70px] md:top-[88px] left-1/2 -translate-x-1/2 w-[calc(100%-1rem)] md:w-[60%] lg:w-[46%] max-w-2xl overflow-hidden z-40"
             >
                 <div className="bg-[#0d1520] border border-slate-700/60 rounded-2xl p-3 shadow-[0_8px_32px_rgba(0,0,0,0.5)] mt-2">
                     <div className="relative">
@@ -397,7 +395,7 @@ export default function Navbar() {
                                             <Wrench className="w-3.5 h-3.5 text-amber-400 shrink-0" />
                                         )}
                                         <div>
-                                            <p className="text-sm text-white">{item.title}</p>
+                                                <p className="text-sm text-white leading-snug">{item.title}</p>
                                             <p className="text-xs text-slate-500">
                                                 {item.type === "blog"
                                                     ? `Blog · ${item.category ?? ""}`
@@ -430,7 +428,7 @@ export default function Navbar() {
                     opacity: mobileOpen ? 1 : 0,
                 }}
                 transition={{ duration: 0.2, ease: "easeOut" as const }}
-                className="md:hidden fixed top-[72px] left-1/2 -translate-x-1/2 w-[95%] max-w-screen-xl overflow-hidden bg-[#0d1520] border border-slate-700/60 rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.5)] z-40 mt-1"
+                className="md:hidden fixed top-[70px] left-1/2 -translate-x-1/2 w-[calc(100%-1rem)] max-w-screen-xl overflow-hidden bg-[#0d1520] border border-slate-700/60 rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.5)] z-40 mt-1"
             >
                 <div className="flex flex-col divide-y divide-slate-700/50 p-2">
                     {navItems.map((item) => {

@@ -19,16 +19,16 @@ import { rdServices, RdService } from "@/lib/servicesData";
 //     { id: 10, title: "Vapor Chamber Assembly", description: "Two-phase heat transfer devices that provide rapid, uniform heat spreading for high heat flux.", cycleTime: "14-18 Days", price: "45,000", imageUrl: "/images/vapor-chamber.webp" },
 // ];
 
-export const services: any[] = []
+export const services: RdService[] = []
 
 const tagColors: Record<string, string> = {
-    "Core Service": "text-cyan-400 bg-cyan-400/10 border-cyan-400/20",
-    "Battery": "text-green-400 bg-green-400/10 border-green-400/20",
-    "Cooling": "text-blue-400 bg-blue-400/10 border-blue-400/20",
-    "PCB": "text-purple-400 bg-purple-400/10 border-purple-400/20",
-    "Renewable": "text-amber-400 bg-amber-400/10 border-amber-400/20",
-    "Advisory": "text-orange-400 bg-orange-400/10 border-orange-400/20",
-    "IP & Licensing": "text-pink-400 bg-pink-400/10 border-pink-400/20",
+    "Core Service": "text-cyan-100 bg-cyan-500/20 border-cyan-400/30",
+    "Battery": "text-cyan-100 bg-cyan-500/20 border-cyan-400/30",
+    "Cooling": "text-cyan-100 bg-cyan-500/20 border-cyan-400/30",
+    "PCB": "text-cyan-100 bg-cyan-500/20 border-cyan-400/30",
+    "Renewable": "text-cyan-100 bg-cyan-500/20 border-cyan-400/30",
+    "Advisory": "text-cyan-100 bg-cyan-500/20 border-cyan-400/30",
+    "IP & Licensing": "text-cyan-100 bg-cyan-500/20 border-cyan-400/30",
 }
 
 const BentoCard = ({ service, index, variant = "default" }: {
@@ -36,7 +36,6 @@ const BentoCard = ({ service, index, variant = "default" }: {
     index: number;
     variant?: "default" | "featured" | "horizontal"
 }) => {
-    const isFeatured = variant === "featured"
     const isHorizontal = variant === "horizontal"
 
     return (
@@ -48,31 +47,31 @@ const BentoCard = ({ service, index, variant = "default" }: {
             className="h-full"
         >
             <Link href={`/servicesoffered/${service.id}`} className="group block h-full">
-                <div className={`relative flex bg-[#0d1520] border border-slate-700/60 rounded-2xl overflow-hidden transition-all duration-300 hover:border-cyan-500/40 hover:shadow-[0_0_40px_rgba(6,182,212,0.08)] ${isHorizontal ? "flex-row min-h-[220px]" : "flex-col min-h-[320px]"}`}>
+                <div className={`relative flex bg-[#0d1520] border border-slate-700/60 rounded-2xl overflow-hidden transition-all duration-300 hover:border-cyan-500/40 hover:shadow-[0_0_40px_rgba(6,182,212,0.08)] ${isHorizontal ? "flex-col sm:flex-row min-h-[260px] sm:min-h-[220px]" : "flex-col min-h-[300px] sm:min-h-[320px]"}`}>
 
                     {/* Background image */}
                     {isHorizontal ? (
-                        <div className="relative w-48 shrink-0 overflow-hidden">
+                        <div className="relative h-40 sm:h-auto sm:w-48 shrink-0 overflow-hidden">
                             <img
                                 src={service.imageUrl}
                                 alt={service.title}
-                                className="absolute inset-0 w-full h-full object-cover opacity-20 group-hover:opacity-35 group-hover:scale-105 transition-all duration-500"
+                                className="absolute inset-0 w-full h-full object-cover opacity-35 group-hover:opacity-50 group-hover:scale-105 transition-all duration-500"
                             />
-                            <div className="absolute inset-0 bg-gradient-to-r from-transparent to-[#0d1520]" />
+                            <div className="absolute inset-0 bg-gradient-to-r from-transparent to-[#0d1520]/75" />
                         </div>
                     ) : (
                         <div className="absolute inset-0">
                             <img
                                 src={service.imageUrl}
                                 alt={service.title}
-                                className="w-full h-full object-cover opacity-10 group-hover:opacity-20 group-hover:scale-105 transition-all duration-500"
+                                className="w-full h-full object-cover opacity-25 group-hover:opacity-40 group-hover:scale-105 transition-all duration-500"
                             />
-                            <div className="absolute inset-0 bg-gradient-to-t from-[#0d1520] via-[#0d1520]/70 to-[#0d1520]/20" />
+                            <div className="absolute inset-0 bg-gradient-to-t from-[#0d1520]/90 via-[#0d1520]/45 to-[#0d1520]/10" />
                         </div>
                     )}
 
                     {/* Content */}
-                    <div className="relative z-10 flex flex-col flex-1 p-6">
+                    <div className="relative z-10 flex flex-col flex-1 p-5 sm:p-6">
                         {/* Top */}
                         <div className="flex items-start justify-between mb-4">
                             <span className={`text-[10px] font-mono uppercase tracking-widest border rounded-full px-2.5 py-1 ${tagColors[service.tag] || tagColors["Core Service"]}`}>
@@ -85,7 +84,7 @@ const BentoCard = ({ service, index, variant = "default" }: {
 
                         {/* Bottom */}
                         <div className="mt-auto">
-                            <h3 className="font-bold text-white leading-snug text-2xl group-hover:text-cyan-400 transition-colors duration-200 mb-3">
+                            <h3 className="font-bold text-white leading-snug text-xl sm:text-2xl group-hover:text-cyan-400 transition-colors duration-200 mb-3">
                                 {service.title}
                             </h3>
                             <div className="inline-flex items-center gap-2 border border-slate-700/60 group-hover:border-cyan-500/40 group-hover:bg-cyan-500/5 rounded-full px-4 py-2 transition-all duration-300">
@@ -107,7 +106,7 @@ const BentoCard = ({ service, index, variant = "default" }: {
 
 export default function ServicesSection() {
     return (
-        <section id="services" className="relative pt-32 pb-24 px-4 md:px-8 bg-[#080c14] overflow-hidden">
+        <section id="services" className="relative pt-28 sm:pt-32 pb-16 sm:pb-24 px-4 md:px-8 bg-[#080c14] overflow-hidden">
 
             {/* Background grid texture */}
             <div
@@ -127,7 +126,7 @@ export default function ServicesSection() {
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     transition={{ duration: 0.6, ease: "easeOut" as const }}
-                    className="mb-14"
+                    className="mb-10 md:mb-14"
                 >
                     <div className="flex items-center gap-3 mb-4">
                         <span className="h-px w-8 bg-cyan-500" />
@@ -136,14 +135,14 @@ export default function ServicesSection() {
                         </span>
                     </div>
                     <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
-                        <h2 className="text-4xl md:text-5xl font-bold text-white leading-tight">
+                        <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white leading-tight">
                             Research & Advisory
                         </h2>
                         <p className="text-slate-400 text-sm max-w-sm leading-relaxed md:text-right">
                             End-to-end R&D, simulation, testing, and consultancy services for thermal and energy systems.
                         </p>
                     </div>
-                    <div className="mt-8 flex flex-wrap gap-6 border-t border-slate-700/50 pt-6">
+                    <div className="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-5 sm:gap-6 border-t border-slate-700/50 pt-6">
                         {[
                             { label: "Services", value: "8+" },
                             { label: "Domains", value: "Thermal, Energy, PCB" },

@@ -5,6 +5,12 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, Clock, Twitter, Linkedin, Copy } from "lucide-react";
 import { PortableText } from "@portabletext/react";
 import { client, urlFor } from "@/lib/sanity";
+import type { Metadata } from "next";
+import type { ReactNode } from "react";
+import type {
+    PortableTextBlock,
+    PortableTextComponents,
+} from "@portabletext/react";
 
 export const revalidate = 60;
 
@@ -45,24 +51,100 @@ export async function generateStaticParams() {
     return posts.map((post: { slug: string }) => ({ slug: post.slug }));
 }
 
-const portableTextComponents = {
+type BlogPost = {
+    _id: string;
+    title: string;
+    date: string;
+    category?: string;
+    slug: string;
+    readTime?: string;
+    author?: {
+        name?: string;
+        role?: string;
+    };
+    mainImage?: unknown;
+    body?: PortableTextBlock[];
+};
+
+type PortableChildrenProps = {
+    children?: ReactNode;
+};
+
+type PortableImageValue = {
+    alt?: string;
+    caption?: string;
+};
+
+type PortableImageProps = {
+    value: PortableImageValue;
+};
+
+type PortableLinkProps = PortableChildrenProps & {
+    value?: {
+        href: string;
+    };
+};
+
+export async function generateMetadata({
+    params,
+}: {
+    params: Promise<{ slug: string }>
+}): Promise<Metadata> {
+    const { slug } = await params;
+    const post = await getPost(slug) as BlogPost | null;
+
+    if (!post) {
+        return {
+            title: "Article Not Found",
+            robots: { index: false, follow: false },
+        };
+    }
+
+    const description = post.category
+        ? `${post.category} article from Zhivam: ${post.title}`
+        : `Article from Zhivam: ${post.title}`;
+    const imageUrl = post.mainImage ? urlFor(post.mainImage).width(1200).height(630).url() : "/images/Heat_Sink.png";
+
+    return {
+        title: post.title,
+        description,
+        alternates: { canonical: `/blog/${post.slug}` },
+        openGraph: {
+            type: "article",
+            title: post.title,
+            description,
+            url: `/blog/${post.slug}`,
+            publishedTime: post.date,
+            authors: post.author?.name ? [post.author.name] : undefined,
+            images: [{ url: imageUrl, alt: post.title }],
+        },
+        twitter: {
+            card: "summary_large_image",
+            title: post.title,
+            description,
+            images: [imageUrl],
+        },
+    };
+}
+
+const portableTextComponents: PortableTextComponents = {
     block: {
-        normal: ({ children }: any) => (
-            <p style={{ textAlign: 'justify' }} className="mb-6 text-slate-300 leading-relaxed text-lg">
+        normal: ({ children }: PortableChildrenProps) => (
+            <p style={{ textAlign: 'justify' }} className="mb-6 text-slate-300 leading-relaxed text-base sm:text-lg">
                 {children}
             </p>
         ),
-        h2: ({ children }: any) => (
+        h2: ({ children }: PortableChildrenProps) => (
             <h2 className="text-2xl font-bold mt-12 mb-6 text-white">{children}</h2>
         ),
-        blockquote: ({ children }: any) => (
+        blockquote: ({ children }: PortableChildrenProps) => (
             <blockquote className="border-l-4 border-cyan-500 pl-6 py-2 my-10 text-xl italic text-slate-200 bg-cyan-500/5 rounded-r-xl">
-                "{children}"
+                &ldquo;{children}&rdquo;
             </blockquote>
         ),
     },
     types: {
-        image: ({ value }: any) => (
+        image: ({ value }: PortableImageProps) => (
             <div className="relative w-full my-10 rounded-2xl overflow-hidden border border-slate-700/60">
                 <Image
                     src={urlFor(value).width(1200).url()}
@@ -80,8 +162,8 @@ const portableTextComponents = {
         ),
     },
     marks: {
-        link: ({ children, value }: any) => (
-            <a href={value.href} target="_blank"
+        link: ({ children, value }: PortableLinkProps) => (
+            <a href={value?.href || "#"} target="_blank"
                 rel="noopener noreferrer" className="text-cyan-400 hover:underline">
                 {children}
             </a>
@@ -95,12 +177,12 @@ export default async function BlogPostPage({
     params: Promise<{ slug: string }>
 }) {
     const { slug } = await params
-    const post = await getPost(slug)
+    const post = await getPost(slug) as BlogPost | null
 
     if (!post) return notFound()
 
     return (
-        <article className="relative min-h-screen bg-[#080c14] text-white pt-32 pb-24 px-4 md:px-8 overflow-hidden">
+        <article className="relative min-h-screen bg-[#080c14] text-white pt-28 sm:pt-32 pb-16 sm:pb-24 px-4 md:px-8 overflow-hidden">
 
             <div className="pointer-events-none absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-cyan-500/5 blur-[120px] rounded-full" />
             <div
@@ -124,7 +206,7 @@ export default async function BlogPostPage({
 
                 {/* Header */}
                 <header className="mb-12">
-                    <div className="flex flex-wrap items-center gap-4 mb-6 text-xs font-mono text-slate-400">
+                    <div className="flex flex-wrap items-center gap-2 sm:gap-4 mb-6 text-xs font-mono text-slate-400">
                         <span className="uppercase tracking-widest text-cyan-400 bg-cyan-400/10 border border-cyan-400/20 rounded-full px-3 py-1">
                             {post.category}
                         </span>
@@ -144,11 +226,11 @@ export default async function BlogPostPage({
                         )}
                     </div>
 
-                    <h1 className="text-3xl md:text-5xl font-bold text-white leading-[1.15] mb-8">
+                    <h1 className="text-2xl sm:text-3xl md:text-5xl font-bold text-white leading-[1.15] mb-8">
                         {post.title}
                     </h1>
 
-                    <div className="flex items-center justify-between border-t border-slate-700/50 pt-6">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-5 border-t border-slate-700/50 pt-6">
                         <div className="flex items-center gap-3">
                             <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-cyan-400 font-bold border border-slate-700">
                                 {post.author?.name?.charAt(0)}
@@ -174,8 +256,8 @@ export default async function BlogPostPage({
                 </header>
 
                 {/* Hero Image */}
-                {post.mainImage && (
-                    <div className="relative w-full h-[300px] md:h-[450px] rounded-2xl overflow-hidden bg-slate-800/40 border border-slate-700/60 mb-14">
+                {post.mainImage ? (
+                    <div className="relative w-full h-[240px] sm:h-[300px] md:h-[450px] rounded-2xl overflow-hidden bg-slate-800/40 border border-slate-700/60 mb-10 sm:mb-14">
                         <Image
                             src={urlFor(post.mainImage).width(1200).url()}
                             alt={post.title}
@@ -184,13 +266,13 @@ export default async function BlogPostPage({
                             className="object-cover"
                         />
                     </div>
-                )}
+                ) : null}
 
                 {/* Article Body */}
-                <div className="blog-content prose prose-invert prose-cyan max-w-none prose-p:text-slate-300 prose-p:leading-relaxed prose-p:text-lg prose-headings:text-white prose-a:text-cyan-400"
+                <div className="blog-content prose prose-invert prose-cyan max-w-none prose-p:text-slate-300 prose-p:leading-relaxed prose-p:text-base sm:prose-p:text-lg prose-headings:text-white prose-a:text-cyan-400"
                     style={{ textAlign: 'justify' }}>
                     <PortableText
-                        value={post.body}
+                        value={post.body ?? []}
                         components={portableTextComponents}
                     />
                 </div>

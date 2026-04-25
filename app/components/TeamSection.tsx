@@ -77,7 +77,7 @@ export default function TeamSection() {
     };
 
     return (
-        <section className="relative py-24 px-4 md:px-8 bg-[#080c14] overflow-hidden">
+        <section className="relative py-16 sm:py-20 md:py-24 px-4 md:px-8 bg-[#080c14] overflow-hidden">
 
             {/* Background grid texture */}
             <div
@@ -99,7 +99,7 @@ export default function TeamSection() {
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     transition={{ duration: 0.6, ease: "easeOut" as const }}
-                    className="mb-14"
+                    className="mb-10 md:mb-14"
                 >
                     <div className="flex items-center gap-3 mb-4">
                         <span className="h-px w-8 bg-cyan-500" />
@@ -108,7 +108,7 @@ export default function TeamSection() {
                         </span>
                     </div>
                     <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
-                        <h2 className="text-4xl md:text-5xl font-bold text-white leading-tight">
+                        <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white leading-tight">
                             Meet the Engineers
                         </h2>
                         {/* <p className="text-slate-400 text-sm max-w-sm leading-relaxed md:text-right">
@@ -144,7 +144,7 @@ export default function TeamSection() {
                                 opacity: { duration: 0.5, delay: (index % 4) * 0.08 },
                                 y: { duration: 0.5, delay: (index % 4) * 0.08 },
                             }}
-                            className="relative bg-[#0d1520] border border-slate-700/60 rounded-2xl p-6 flex flex-col items-center text-center w-full overflow-hidden hover:border-cyan-500/40 transition-colors duration-300"
+                            className="relative bg-[#0d1520] border border-slate-700/60 rounded-2xl p-5 sm:p-6 flex flex-col items-center text-center w-full overflow-hidden hover:border-cyan-500/40 transition-colors duration-300"
                         >
                             {/* Index badge
                             <span className="absolute top-4 left-4 text-xs font-mono text-slate-500 bg-slate-900/80 border border-slate-700/60 rounded-md px-2 py-0.5 tabular-nums">
@@ -168,14 +168,9 @@ export default function TeamSection() {
                                 </span>
                             )}
 
-                            {/* Hexagon image */}
+                            {/* Profile image */}
                             <motion.div layout="position" className="mt-4 relative w-28 h-28 group">
-                                <div
-                                    className="w-full h-full relative overflow-hidden"
-                                    style={{
-                                        clipPath: "polygon(25% 6%, 75% 6%, 100% 50%, 75% 94%, 25% 94%, 0% 50%)"
-                                    }}
-                                >
+                                <div className="w-full h-full relative overflow-hidden rounded-full">
                                     <img
                                         src={member.image}
                                         alt={member.name}

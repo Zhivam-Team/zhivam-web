@@ -4,9 +4,24 @@ import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import { client } from "@/lib/sanity";
 import { urlFor } from "@/lib/sanity";
-import { getPost, getAllSlugs } from "@/lib/queries"
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+    title: "Blog",
+    description: "Thermal engineering articles, R&D insights, and product cooling research from Zhivam.",
+    alternates: { canonical: "/blog" },
+};
 
 export const revalidate = 60;
+
+type BlogSummary = {
+    _id: string;
+    title: string;
+    date: string;
+    category?: string;
+    slug: string;
+    mainImage?: unknown;
+};
 
 async function getPosts() {
     return await client.fetch(`
@@ -22,11 +37,11 @@ async function getPosts() {
 }
 
 export default async function BlogPage() {
-    const blogs = await getPosts();
+    const blogs = await getPosts() as BlogSummary[];
     const [featured, ...rest] = blogs;
 
     return (
-        <section className="relative min-h-screen bg-[#080c14] text-white py-28 px-4 md:px-8 overflow-hidden">
+        <section className="relative min-h-screen bg-[#080c14] text-white py-24 sm:py-28 px-4 md:px-8 overflow-hidden">
 
             {/* Background grid texture */}
             <div
@@ -43,7 +58,7 @@ export default async function BlogPage() {
             <div className="relative max-w-screen-xl mx-auto">
 
                 {/* Header */}
-                <div className="mb-14">
+                <div className="mb-10 md:mb-14">
                     <div className="flex items-center gap-3 mb-4">
                         <span className="h-px w-8 bg-cyan-500" />
                         <span className="text-xs font-mono uppercase tracking-[0.2em] text-cyan-500">
@@ -51,7 +66,7 @@ export default async function BlogPage() {
                         </span>
                     </div>
                     <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
-                        <h1 className="text-4xl md:text-5xl font-bold text-white leading-tight">
+                        <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white leading-tight">
                             Latest Articles
                         </h1>
                         <p className="text-slate-400 text-sm max-w-sm leading-relaxed md:text-right">
@@ -60,7 +75,7 @@ export default async function BlogPage() {
                     </div>
 
                     {/* Stats row */}
-                    <div className="mt-8 flex flex-wrap gap-6 border-t border-slate-700/50 pt-6">
+                    <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-6 border-t border-slate-700/50 pt-6">
                         {[
                             { label: "Articles Published", value: `${blogs.length}` },
                             { label: "Latest", value: featured ? new Date(featured.date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "-" },
@@ -81,8 +96,8 @@ export default async function BlogPage() {
                             <div className="relative rounded-2xl overflow-hidden border border-slate-700/60 hover:border-cyan-500/50 transition-all duration-300 hover:shadow-[0_0_40px_rgba(6,182,212,0.08)]">
 
                                 {/* Image */}
-                                <div className="relative h-[380px] md:h-[460px] w-full overflow-hidden bg-slate-800/40">
-                                    {featured.mainImage && (
+                                <div className="relative h-[340px] sm:h-[380px] md:h-[460px] w-full overflow-hidden bg-slate-800/40">
+                                    {featured.mainImage ? (
                                         <Image
                                             src={urlFor(featured.mainImage).width(1200).url()}
                                             alt={featured.title}
@@ -90,14 +105,14 @@ export default async function BlogPage() {
                                             priority
                                             className="object-cover transition-transform duration-500 group-hover:scale-105 opacity-70 group-hover:opacity-90"
                                         />
-                                    )}
+                                    ) : null}
                                     <div className="absolute inset-0 bg-gradient-to-t from-[#080c14] via-[#080c14]/40 to-transparent" />
                                 </div>
 
                                 {/* Overlay content */}
-                                <div className="absolute bottom-0 left-0 right-0 p-7 flex items-end justify-between">
+                                <div className="absolute bottom-0 left-0 right-0 p-5 sm:p-7 flex items-end justify-between">
                                     <div>
-                                        <div className="flex items-center gap-3 mb-3">
+                                        <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-3">
                                             <span className="text-[10px] font-mono uppercase tracking-widest text-cyan-400 bg-cyan-400/10 border border-cyan-400/20 rounded-full px-3 py-1">
                                                 {featured.category}
                                             </span>
@@ -105,7 +120,7 @@ export default async function BlogPage() {
                                                 {new Date(featured.date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
                                             </span>
                                         </div>
-                                        <h2 className="text-2xl md:text-3xl font-bold text-white max-w-2xl leading-snug group-hover:text-cyan-400 transition-colors duration-200">
+                                        <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-white max-w-2xl leading-snug group-hover:text-cyan-400 transition-colors duration-200">
                                             {featured.title}
                                         </h2>
                                     </div>
@@ -120,7 +135,7 @@ export default async function BlogPage() {
 
                 {/* Remaining posts grid */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-                    {rest.map((blog: any) => (
+                    {rest.map((blog) => (
                         <Link key={blog._id} href={`/blog/${blog.slug}`} className="group block h-full cursor-pointer">
                             <div className="relative h-full flex flex-col bg-[#0d1520] border border-slate-700/60 rounded-2xl overflow-hidden transition-all duration-300 hover:border-cyan-500/50 hover:shadow-[0_0_32px_rgba(6,182,212,0.08)]">
 
@@ -131,7 +146,7 @@ export default async function BlogPage() {
 
                                 {/* Image */}
                                 <div className="relative w-full h-44 overflow-hidden bg-slate-800/40">
-                                    {blog.mainImage && (
+                                    {blog.mainImage ? (
                                         <Image
                                             src={urlFor(blog.mainImage).width(600).url()}
                                             alt={blog.title}
@@ -139,7 +154,7 @@ export default async function BlogPage() {
                                             loading="lazy"
                                             className="object-cover transition-transform duration-500 group-hover:scale-105 opacity-75 group-hover:opacity-100"
                                         />
-                                    )}
+                                    ) : null}
                                     <div className="absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-[#0d1520] to-transparent" />
                                 </div>
 

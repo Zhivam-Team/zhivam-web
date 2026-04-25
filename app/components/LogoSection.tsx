@@ -12,7 +12,7 @@ export default function LogoSection() {
     ];
 
     return (
-        <section className="relative py-24 px-4 md:px-8 bg-[#080c14] overflow-hidden">
+        <section className="relative py-16 sm:py-20 md:py-24 px-4 md:px-8 bg-[#080c14] overflow-hidden">
 
             {/* Background grid texture */}
             <div
@@ -34,7 +34,7 @@ export default function LogoSection() {
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     transition={{ duration: 0.6, ease: "easeOut" as const }}
-                    className="mb-14"
+                    className="mb-10 md:mb-14"
                 >
                     <div className="flex items-center gap-3 mb-4">
                         <span className="h-px w-8 bg-cyan-500" />
@@ -43,7 +43,7 @@ export default function LogoSection() {
                         </span>
                     </div>
                     <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
-                        <h2 className="text-4xl md:text-5xl font-bold text-white leading-tight">
+                        <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white leading-tight">
                             Trusted & Collaborated With
                         </h2>
                         <p className="text-slate-400 text-sm max-w-sm leading-relaxed md:text-right">
@@ -64,14 +64,14 @@ export default function LogoSection() {
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true, margin: "-40px" }}
                             transition={{ duration: 0.5, delay: index * 0.08, ease: "easeOut" as const }}
-                            className="group relative bg-[#0d1520] border border-slate-700/60 rounded-2xl p-4 flex items-center justify-center hover:border-cyan-500/40 transition-all duration-300 h-28"
+                            className="group relative bg-[#0d1520] hover:bg-cyan-500/10 border border-slate-700/60 rounded-2xl p-3 sm:p-4 flex items-center justify-center hover:border-cyan-500/60 transition-all duration-300 h-24 sm:h-28"
                         >
                             <img
                                 src={logo}
                                 alt={`Partner ${index + 1}`}
                                 loading="lazy"
                                 decoding="async"
-                                className="max-h-20 w-full object-contain brightness-0 invert opacity-60 transition-all duration-300"
+                                className="max-h-20 w-full object-contain opacity-60 brightness-0 invert transition-all duration-300 group-hover:opacity-100 group-hover:brightness-100 group-hover:invert-0"
                             />
                         </motion.div>
                     ))}
