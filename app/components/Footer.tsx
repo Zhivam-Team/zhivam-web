@@ -131,7 +131,7 @@ export default function Footer() {
                 {/* COPYRIGHT */}
                 {/* FIX: slightly more breathing room above copyright on mobile */}
                 <div className="text-center text-xs text-slate-500 mt-10 md:mt-14">
-                    © {year} Zhivam Web. All rights reserved.
+                    © {year} Zhivam Technologies. All rights reserved.
                 </div>
             </div>
         </motion.footer>
