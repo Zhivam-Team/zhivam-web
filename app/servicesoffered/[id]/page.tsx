@@ -65,9 +65,14 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     }
 
     return {
-        title: service.title,
+        title: `${service.title} | Zhivam`,
         description: service.description,
         alternates: { canonical: `/servicesoffered/${service.id}` },
+        // ADD THIS: Hides all individual service pages (like rd-7) from Google
+        robots: {
+            index: false,
+            follow: false,
+        },
         openGraph: {
             title: `${service.title} | Zhivam`,
             description: service.description,

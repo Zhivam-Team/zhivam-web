@@ -160,7 +160,7 @@ export default function Home() {
                 {/* HERO BACKGROUND IMAGE */}
                 <div className="absolute inset-0 z-0 overflow-hidden">
                     <img
-                        src="/images/Heat_Sink.png"
+                        src="/images/Heat_Sink.webp"
                         alt="Hero"
                         loading="eager"
                         decoding="async"

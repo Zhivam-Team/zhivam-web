@@ -44,7 +44,7 @@ export const metadata: Metadata = {
         description: siteDescription,
         images: [
             {
-                url: "/images/Heat_Sink.png",
+                url: "/images/Heat_Sink.webp",
                 width: 1200,
                 height: 630,
                 alt: "Zhivam thermal engineering and cooling solutions",
@@ -55,7 +55,7 @@ export const metadata: Metadata = {
         card: "summary_large_image",
         title: `${siteName} | Thermal Engineering & Cooling Solutions`,
         description: siteDescription,
-        images: ["/images/Heat_Sink.png"],
+        images: ["/images/Heat_Sink.webp"],
     },
     robots: {
         index: true,
