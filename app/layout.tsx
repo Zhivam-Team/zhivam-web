@@ -2,8 +2,11 @@ import "./globals.css";
 import type { Metadata } from "next";
 import type { Viewport } from "next";
 import { Geist } from "next/font/google";
+import { AdminModeProvider } from "@/app/contexts/AdminModeContext";
 import { CartProvider } from "@/app/contexts/CartContext";
 import SiteShell from "@/app/components/SiteShell";
+import CartDrawer from "@/app/components/CartDrawer";
+import { AuthProvider } from "@/context/AuthContext";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.zhivam.com";
 const siteName = "Zhivam";
@@ -114,13 +117,18 @@ export default function RootLayout({
     return (
         <html lang="en">
             <body className={`${geist.className} bg-black text-white`}>
-                <script
-                    type="application/ld+json"
-                    dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
-                />
-                <CartProvider>
-                    <SiteShell>{children}</SiteShell>
-                </CartProvider>
+                <AuthProvider>
+                    <AdminModeProvider>
+                        <script
+                            type="application/ld+json"
+                            dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
+                        />
+                        <CartProvider>
+                            <CartDrawer />
+                            <SiteShell>{children}</SiteShell>
+                        </CartProvider>
+                    </AdminModeProvider>
+                </AuthProvider>
             </body>
         </html>
     );
