@@ -57,7 +57,7 @@ const team = [
         name: "Rohit",
         role: "Manufacturing Engineer",
         image: "/images/Rohit.png",
-        linkedin: "https://www.linkedin.com/in/rohit-rajesh-b58a8133b/",
+        linkedin: "https://www.linkedin.com/in/rohit-rajesh-64a36738a/",
         desc: "Develops scalable manufacturing strategies for thermal systems, bridges the gap between design and fabrication, improves production efficiency through process optimization, and ensures consistent, leak-proof cooling system output."
     }
 ];
