@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { getFirebase } from "@/lib/firebase";
 import { doc, getDoc } from "firebase/firestore";
 import { useAuth } from "@/context/AuthContext";
-import { useCart } from "@/app/contexts/CartContext";
+import { useCart } from "@/app/context/CartContext";
 import { useFavourites } from "@/hooks/useFavourites";
 import { useRouter } from "next/navigation";
 import Image from "next/image";

@@ -36,6 +36,10 @@ interface SheetQuote {
     "Rθ (°C/W)": string;
     "Customer Notes": string;
     "Admin Notes": string;
+    "Payment Amount": string;
+    "Payment Status": string;
+    "QR Image URL": string;
+    "QR ID": string;
 }
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -82,6 +86,10 @@ export default function AdminPage() {
     const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
     const [toast, setToast] = useState("");
     const [error, setError] = useState("");
+    const [showPriceModal, setShowPriceModal] = useState(false);
+    const [priceAmount, setPriceAmount] = useState("");
+    const [priceNotes, setPriceNotes] = useState("");
+    const [generatingQR, setGeneratingQR] = useState(false);
 
     // ── Load quotes ────────────────────────────────────────────────────────────
     const loadQuotes = useCallback(async () => {
@@ -111,6 +119,16 @@ export default function AdminPage() {
 
     // ── Update status or notes ─────────────────────────────────────────────────
     const updateQuote = async (id: string, patch: { status?: string; adminNotes?: string }) => {
+        const applyPatch = (quote: SheetQuote) => ({
+            ...quote,
+            ...(patch.status ? { "Status": patch.status } : {}),
+            ...(patch.adminNotes !== undefined ? { "Admin Notes": patch.adminNotes } : {}),
+        });
+        const previousQuote = quotes.find(quote => quote["Quote ID"] === id);
+
+        // Reflect the change immediately instead of waiting for a Sheets read-back.
+        setQuotes(previous => previous.map(quote => quote["Quote ID"] === id ? applyPatch(quote) : quote));
+        setSelected(previous => previous?.["Quote ID"] === id ? applyPatch(previous) : previous);
         setSaving(true);
         try {
             const res = await fetch("/api/quote", {
@@ -120,18 +138,89 @@ export default function AdminPage() {
             });
             const data = await res.json();
             if (!data.success) throw new Error("Update failed");
-            // Refresh
-            await loadQuotes();
-            // Re-select updated quote
-            setSelected(prev => prev?.["Quote ID"] === id
-                ? { ...prev, ...(patch.status ? { "Status": patch.status } : {}), ...(patch.adminNotes !== undefined ? { "Admin Notes": patch.adminNotes } : {}) }
-                : prev
-            );
             showToast(patch.status ? "Status updated ✓" : "Note saved ✓");
         } catch {
+            // Roll back only when the save did not reach the server.
+            if (previousQuote) {
+                setQuotes(previous => previous.map(quote => quote["Quote ID"] === id ? previousQuote : quote));
+                setSelected(previous => previous?.["Quote ID"] === id ? previousQuote : previous);
+            }
             showToast("❌ Update failed — check your connection");
         } finally {
             setSaving(false);
+        }
+    };
+
+    // ── Intercept "Quoted" click to collect amount first ──────────────────────
+    const handleStatusClick = (q: SheetQuote, s: QuoteStatus) => {
+        if (s === "quoted") {
+            setPriceAmount(q["Payment Amount"] || "");
+            setPriceNotes("");
+            setShowPriceModal(true);
+            return;
+        }
+        updateQuote(q["Quote ID"], { status: s });
+    };
+
+    // ── Generate Razorpay payment link + set status to quoted ─────────────────
+    const generateQR = async () => {
+        if (!selected) return;
+        const amt = Number(priceAmount);
+        if (!amt || amt <= 0) { showToast("Enter a valid amount"); return; }
+        setGeneratingQR(true);
+        try {
+            const res = await fetch("/api/quote/razorpay-qr", {
+                method: "POST",
+                headers: { "Content-Type": "application/json", "x-admin-pass": ADMIN_PASSWORD },
+                body: JSON.stringify({ id: selected["Quote ID"], amount: amt, notes: priceNotes, customer: { name: selected["Name"], email: selected["Email"], phone: selected["Phone"] } }),
+            });
+            const data = await res.json();
+            if (!data.success) throw new Error(data.error || "Failed");
+            setShowPriceModal(false);
+
+            setSelected(prev => prev?.["Quote ID"] === selected["Quote ID"]
+                ? { ...prev, "Status": "quoted", "Payment Amount": String(amt), "Payment Status": "pending", "QR Image URL": data.paymentUrl, "QR ID": data.paymentLinkId }
+                : prev
+            );
+            setQuotes(prev => prev.map(quote => quote["Quote ID"] === selected["Quote ID"]
+                ? { ...quote, "Status": "quoted", "Payment Amount": String(amt), "Payment Status": "pending", "QR Image URL": data.paymentUrl, "QR ID": data.paymentLinkId }
+                : quote
+            ));
+            showToast("Payment link created & status set to Quoted ✓");
+        } catch {
+            showToast("❌ Failed to create payment link");
+        } finally {
+            setGeneratingQR(false);
+        }
+    };
+
+    // ── Mark payment paid/pending ──────────────────────────────────────────────
+    const markPaid = async (paid: boolean) => {
+        if (!selected) return;
+        try {
+            await fetch("/api/quote/razorpay-qr", {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json", "x-admin-pass": ADMIN_PASSWORD },
+                body: JSON.stringify({ id: selected["Quote ID"], paymentStatus: paid ? "paid" : "pending" }),
+            });
+
+            setSelected(prev => prev?.["Quote ID"] === selected["Quote ID"]
+                ? { ...prev, "Payment Status": paid ? "paid" : "pending" }
+                : prev
+            );
+            showToast(paid ? "Marked as paid ✓" : "Marked as pending");
+        } catch {
+            showToast("❌ Update failed");
+        }
+    };
+
+    // ── Copy payment link ───────────────────────────────────────────────────────
+    const copyPaymentLink = async (url: string) => {
+        try {
+            await navigator.clipboard.writeText(url);
+            showToast("Payment link copied ✓");
+        } catch {
+            showToast("❌ Couldn't copy link");
         }
     };
 
@@ -212,6 +301,28 @@ export default function AdminPage() {
         ::-webkit-scrollbar-thumb { background: rgba(6,182,212,0.2); border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: rgba(6,182,212,0.4); }
       `}} />
+
+            {/* Price / payment link generation modal */}
+            {showPriceModal && (
+                <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[10000] flex items-center justify-center p-4">
+                    <div className="bg-[#0d1520] border border-slate-700/60 rounded-2xl w-full max-w-sm p-6">
+                        <h3 className="text-white font-bold text-sm mb-4">Set Quote Amount</h3>
+                        <label className="block text-xs text-slate-400 mb-1.5">Amount (₹) <span className="text-red-400">*</span></label>
+                        <input type="number" min="1" value={priceAmount} onChange={e => setPriceAmount(e.target.value)}
+                            className="w-full bg-slate-900/60 border border-slate-700/60 text-cyan-100 font-mono text-sm px-3 py-2 rounded-lg outline-none focus:border-cyan-500/60 mb-3" />
+                        <label className="block text-xs text-slate-400 mb-1.5">Notes <span className="text-slate-600">(optional, shown on payment page)</span></label>
+                        <input type="text" value={priceNotes} onChange={e => setPriceNotes(e.target.value)}
+                            placeholder={`ZHeat Quote ${selected?.["Quote ID"] || ""}`}
+                            className="w-full bg-slate-900/60 border border-slate-700/60 text-cyan-100 font-mono text-sm px-3 py-2 rounded-lg outline-none focus:border-cyan-500/60 mb-4" />
+                        <div className="flex gap-2">
+                            <button onClick={() => setShowPriceModal(false)} className="flex-1 py-2 rounded-lg border border-slate-700/60 text-slate-400 text-xs font-semibold">Cancel</button>
+                            <button onClick={generateQR} disabled={generatingQR} className="flex-1 py-2 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-black text-xs font-bold disabled:opacity-50">
+                                {generatingQR ? "Creating..." : "Create Payment Link"}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Toast */}
             {toast && (
@@ -360,7 +471,7 @@ export default function AdminPage() {
                                         {(["new", "in-progress", "quoted", "closed"] as QuoteStatus[]).map(s => {
                                             const c = STATUS_CONFIG[s];
                                             return (
-                                                <button key={s} disabled={saving} onClick={() => updateQuote(q["Quote ID"], { status: s })}
+                                                <button key={s} disabled={saving} onClick={() => handleStatusClick(q, s)}
                                                     className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all disabled:opacity-50 ${st === s ? `${c.bg} ${c.text} border-current/30` : "bg-transparent border-slate-700/50 text-slate-500 hover:border-slate-500 hover:text-slate-300"}`}>
                                                     <span className={`inline-block w-1.5 h-1.5 rounded-full ${c.dot} mr-1.5`} />
                                                     {c.label}
@@ -369,6 +480,46 @@ export default function AdminPage() {
                                         })}
                                     </div>
                                 </div>
+
+                                {/* Payment */}
+                                {(q["Payment Amount"] || st === "quoted") && (
+                                    <div className="bg-[#0d1520] border border-slate-700/50 rounded-2xl p-4">
+                                        <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Payment</div>
+                                        {q["QR Image URL"] ? (
+                                            <div className="flex flex-col gap-4">
+                                                <div className="flex items-center gap-2 bg-slate-900/60 border border-slate-700/60 rounded-lg px-3 py-2">
+                                                    <span className="flex-1 text-xs font-mono text-cyan-300 truncate">{q["QR Image URL"]}</span>
+                                                    <button
+                                                        onClick={() => copyPaymentLink(q["QR Image URL"])}
+                                                        className="shrink-0 px-2.5 py-1 rounded-md text-[10px] font-semibold border border-slate-700/60 text-slate-400 hover:text-white hover:border-slate-500 transition-all"
+                                                    >
+                                                        Copy
+                                                    </button>
+                                                    <a href={q["QR Image URL"]} target="_blank" rel="noopener noreferrer" className="shrink-0 px-2.5 py-1 rounded-md text-[10px] font-semibold bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/20 transition-all">Open</a>
+                                                </div>
+                                                <div className="text-xs space-y-1.5">
+                                                    <div><span className="text-slate-500">Amount:</span> <span className="text-cyan-300 font-mono">₹{q["Payment Amount"]}</span></div>
+                                                    <div>
+                                                        <span className="text-slate-500">Status:</span>{" "}
+                                                        <span className={q["Payment Status"] === "paid" ? "text-green-400" : "text-amber-400"}>
+                                                            {q["Payment Status"] === "paid" ? "Paid ✓" : "Pending"}
+                                                        </span>
+                                                    </div>
+                                                    <div className="flex gap-2 mt-2">
+                                                        {q["Payment Status"] !== "paid" ? (
+                                                            <button onClick={() => markPaid(true)} className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-green-500/10 border border-green-500/30 text-green-400 hover:bg-green-500/20">Mark Paid</button>
+                                                        ) : (
+                                                            <button onClick={() => markPaid(false)} className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-amber-500/10 border border-amber-500/30 text-amber-400 hover:bg-amber-500/20">Mark Pending</button>
+                                                        )}
+                                                        <button onClick={() => { setPriceAmount(q["Payment Amount"] || ""); setPriceNotes(""); setShowPriceModal(true); }} className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-slate-700/50 text-slate-400 hover:text-white">Regenerate Payment Link</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <button onClick={() => { setPriceAmount(""); setPriceNotes(""); setShowPriceModal(true); }} className="px-4 py-2 bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 rounded-lg text-xs font-semibold hover:bg-cyan-500/20">Create Payment Link</button>
+                                        )}
+                                    </div>
+                                )}
 
                                 {/* Contact */}
                                 <div className="bg-[#0d1520] border border-slate-700/50 rounded-2xl p-4">

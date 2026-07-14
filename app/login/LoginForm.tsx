@@ -4,8 +4,9 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Mail, Lock, LogIn, Eye, EyeOff, AlertTriangle } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useAuth } from "@/app/contexts/AuthContext";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
+
 
 const fadeUp = (delay = 0) => ({
     initial: { opacity: 0, y: 20 },
@@ -34,8 +35,10 @@ export default function LoginForm() {
     const [focused, setFocused] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
 
-    const { loginWithEmail, loginWithGoogle } = useAuth();
+    const { loginWithEmail, signInWithGoogle } = useAuth();
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const redirectTo = searchParams.get("redirect") || "/dashboard";
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -43,7 +46,7 @@ export default function LoginForm() {
         setLoading(true);
         try {
             await loginWithEmail(email, password);
-            router.push("/dashboard");
+            router.push(redirectTo);
         } catch (err: any) {
             setError(mapFirebaseError(err.code));
         } finally {
@@ -55,8 +58,8 @@ export default function LoginForm() {
         setError("");
         setLoading(true);
         try {
-            await loginWithGoogle();
-            router.push("/dashboard");
+            await signInWithGoogle();
+            router.push(redirectTo);
         } catch (err: any) {
             setError(mapFirebaseError(err.code));
         } finally {

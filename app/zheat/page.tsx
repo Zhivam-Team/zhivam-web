@@ -1,6 +1,8 @@
 "use client";
 import React, { useState, useEffect, useRef, useCallback, ReactElement } from "react";
 import dynamic from 'next/dynamic'
+import Link from "next/link";
+import { useAuth } from "@/context/AuthContext";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 type FinType =
@@ -110,6 +112,8 @@ const FinIcons: Record<string, ReactElement> = {
   ),
 };
 
+const ZHEAT_DRAFT_KEY = "zheat_draft";
+
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 function adjCol(hex: string, d: number): string {
   const r = parseInt(hex.slice(1, 3), 16), g = parseInt(hex.slice(3, 5), 16), b = parseInt(hex.slice(5, 7), 16);
@@ -131,8 +135,15 @@ export default function ZHeat() {
   const [showQuoteModal, setShowQuoteModal] = useState(false);
   const [quoteForm, setQuoteForm] = useState({ name: "", email: "", company: "", phone: "", qty: "1", material: "", finish: "As machined", notes: "" });
   const [quoteSent, setQuoteSent] = useState(false);
+  const [showLoginPrompt, setShowLoginPrompt] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const [pendingQuoteIntent, setPendingQuoteIntent] = useState(false);
+  const [needsAutoCompute, setNeedsAutoCompute] = useState(false);
+  const pendingQuoteFromSnapRef = useRef(false);
   const [showTempProfile, setShowTempProfile] = useState(false);
   const cvTempRef = useRef<HTMLCanvasElement>(null);
+
+  const { user, signInWithGoogle } = useAuth();
 
   // Mobile warning banner
   const [isMobile, setIsMobile] = useState(false);
@@ -144,6 +155,163 @@ export default function ZHeat() {
     window.addEventListener("resize", check);
     return () => window.removeEventListener("resize", check);
   }, []);
+
+  useEffect(() => {
+    if (user) {
+      setQuoteForm(prev => ({
+        ...prev,
+        name: prev.name || user.displayName || "",
+        email: prev.email || user.email || "",
+      }));
+    }
+  }, [user]);
+
+  // ── Persistent draft: auto-save every input, survive refresh & login redirects ──
+  const persistDraft = (overrides: Record<string, unknown> = {}) => {
+    const draft = {
+      bL: bLRef.current?.value, bW: bWRef.current?.value, tH: tHRef.current?.value, bH: bHRef.current?.value,
+      material: matRef.current?.value, ck: ckRef.current?.value,
+      fH: fHRef.current?.value, fT: fTRef.current?.value, pD: pDRef.current?.value,
+      taper: taperRef.current?.value, nL: nLRef.current?.value, nW: nWRef.current?.value, pitch: pitchRef.current?.value,
+      Q: QRef.current?.value, Ta: TaRef.current?.value, h: hvRef.current?.value,
+      radEnabled, emis: emisRef.current?.value, Tr: TrRef.current?.value,
+      fin: S.fin, poly: S.poly, stag: S.stag,
+      quoteForm,
+      ...overrides,
+    };
+    try {
+      localStorage.setItem(ZHEAT_DRAFT_KEY, JSON.stringify(draft));
+    } catch {
+      // localStorage unavailable (private browsing etc.) — fail silently
+    }
+  };
+
+  const markPendingQuoteAndPersist = () => persistDraft({ pendingQuote: true });
+
+  const restoreDraft = useCallback(() => {
+    let raw: string | null = null;
+    try { raw = localStorage.getItem(ZHEAT_DRAFT_KEY); } catch { return; }
+    if (!raw) return;
+
+    try {
+      const snap = JSON.parse(raw);
+
+      if (bLRef.current && snap.bL) bLRef.current.value = snap.bL;
+      if (bWRef.current && snap.bW) bWRef.current.value = snap.bW;
+      if (tHRef.current && snap.tH) tHRef.current.value = snap.tH;
+      if (bHRef.current && snap.bH) bHRef.current.value = snap.bH;
+      if (matRef.current && snap.material) {
+        matRef.current.value = snap.material;
+        const isCustom = snap.material === "custom";
+        setShowCustomK(isCustom);
+        setKNote(isCustom ? "custom" : `k = ${snap.material} W/m.K`);
+      }
+      if (ckRef.current && snap.ck) ckRef.current.value = snap.ck;
+      if (fHRef.current && snap.fH) fHRef.current.value = snap.fH;
+      if (fTRef.current && snap.fT) fTRef.current.value = snap.fT;
+      if (pDRef.current && snap.pD) pDRef.current.value = snap.pD;
+      if (taperRef.current && snap.taper) { taperRef.current.value = snap.taper; setTaperVal(parseFloat(snap.taper).toFixed(2)); }
+      if (nLRef.current && snap.nL) nLRef.current.value = snap.nL;
+      if (nWRef.current && snap.nW) nWRef.current.value = snap.nW;
+      if (pitchRef.current && snap.pitch) { pitchRef.current.value = snap.pitch; setPitchNote(parseFloat(snap.pitch) > 0 ? `${snap.pitch}mm` : "auto"); }
+      if (QRef.current && snap.Q) QRef.current.value = snap.Q;
+      if (TaRef.current && snap.Ta) TaRef.current.value = snap.Ta;
+      if (hvRef.current && snap.h) hvRef.current.value = snap.h;
+      if (snap.radEnabled) setRadEnabled(true);
+      if (emisRef.current && snap.emis) emisRef.current.value = snap.emis;
+      if (TrRef.current && snap.Tr) TrRef.current.value = snap.Tr;
+
+      setS(prev => ({ ...prev, fin: snap.fin || prev.fin, poly: snap.poly || prev.poly, stag: snap.stag || prev.stag }));
+
+      if (snap.quoteForm) {
+        setQuoteForm(prev => ({
+          ...prev,
+          ...Object.fromEntries(Object.entries(snap.quoteForm).filter(([, v]) => v)),
+        }));
+      }
+
+      pendingQuoteFromSnapRef.current = !!snap.pendingQuote;
+      setTimeout(() => {
+        setNeedsAutoCompute(true);
+      }, 50);
+    } catch {
+      try { localStorage.removeItem(ZHEAT_DRAFT_KEY); } catch { /* ignore */ }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    restoreDraft();
+  }, [restoreDraft]);
+
+  useEffect(() => {
+    if (!needsAutoCompute) return;
+    lp();
+    if (pendingQuoteFromSnapRef.current) {
+      compute();
+      setPendingQuoteIntent(true);
+      pendingQuoteFromSnapRef.current = false;
+    }
+    setNeedsAutoCompute(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [needsAutoCompute]);
+
+  // Auto-save whenever the quote form (contact fields) changes
+  useEffect(() => {
+    const t = setTimeout(() => persistDraft(), 300);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [quoteForm]);
+
+  // Auto-resume the quote flow once login completes
+  useEffect(() => {
+    if (user && pendingQuoteIntent) {
+      setPendingQuoteIntent(false);
+      setShowLoginPrompt(false);
+      setQuoteSent(false);
+      setShowQuoteModal(true);
+    }
+  }, [user, pendingQuoteIntent]);
+
+  // ── Clear all saved data ──────────────────────────────────────────────────
+  const clearAllData = () => {
+    if (!confirm("Clear all entered data? This can't be undone.")) return;
+
+    if (bLRef.current) bLRef.current.value = "100";
+    if (bWRef.current) bWRef.current.value = "80";
+    if (tHRef.current) tHRef.current.value = "45";
+    if (bHRef.current) bHRef.current.value = "5";
+    if (matRef.current) matRef.current.value = "205";
+    if (ckRef.current) ckRef.current.value = "200";
+    if (fHRef.current) fHRef.current.value = "38";
+    if (fTRef.current) fTRef.current.value = "2.0";
+    if (pDRef.current) pDRef.current.value = "5";
+    if (taperRef.current) taperRef.current.value = "1.0";
+    if (nLRef.current) nLRef.current.value = "10";
+    if (nWRef.current) nWRef.current.value = "8";
+    if (pitchRef.current) pitchRef.current.value = "0";
+    if (QRef.current) QRef.current.value = "50";
+    if (TaRef.current) TaRef.current.value = "25";
+    if (hvRef.current) hvRef.current.value = "25";
+    if (emisRef.current) emisRef.current.value = "0.85";
+    if (TrRef.current) TrRef.current.value = "25";
+
+    setShowCustomK(false);
+    setKNote("k = 205 W/m.K");
+    setTaperVal("1.00");
+    setPitchNote("auto");
+    setRadEnabled(false);
+    setS({ fin: "longitudinal", poly: 3, stag: "half", res: null });
+    setQuoteForm({
+      name: user?.displayName || "", email: user?.email || "",
+      company: "", phone: "", qty: "1", material: "", finish: "As machined", notes: "",
+    });
+
+    try { localStorage.removeItem(ZHEAT_DRAFT_KEY); } catch { /* ignore */ }
+    setTimeout(lp, 50);
+  };
+
+
 
   // Input refs
   const bLRef = useRef<HTMLInputElement>(null);
@@ -1313,8 +1481,8 @@ export default function ZHeat() {
                     }
                     try {
                       const payload = {
-                        id: `Q-${Date.now()}`,
                         submittedAt: new Date().toISOString(),
+                        uid: user?.uid || null,
                         contact: { ...quoteForm },
                         geometry: S.res ? {
                           type: S.res.type, L_mm: S.res.L_mm, W_mm: S.res.W_mm,
@@ -1350,6 +1518,69 @@ export default function ZHeat() {
         </div>
       )}
 
+      {/* ── Login Prompt Modal ─────────────────────────────────────────── */}
+      {showLoginPrompt && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[10000] flex items-center justify-center p-4">
+          <div className="bg-[#0d1520] border border-slate-700/60 rounded-2xl w-full max-w-sm shadow-2xl p-6 text-center">
+            <div className="w-14 h-14 bg-cyan-500/10 border border-cyan-500/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#06b6d4" strokeWidth="1.8">
+                <rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0110 0v4" />
+              </svg>
+            </div>
+            <h2 className="text-base font-bold text-white mb-1.5">Sign in to request a quote</h2>
+            <p className="text-xs text-slate-400 mb-6 leading-relaxed">
+              Your fin analysis is saved — sign in and you&apos;ll come right back to request your quote.
+            </p>
+
+            <button
+              onClick={async () => {
+                setGoogleLoading(true);
+                try {
+                  setPendingQuoteIntent(true);
+                  await signInWithGoogle();
+                  // onAuthStateChanged + the effect above will open the quote modal automatically
+                  setShowLoginPrompt(false);
+                } catch {
+                  setPendingQuoteIntent(false);
+                  alert("Sign-in failed or was cancelled. Please try again.");
+                } finally {
+                  setGoogleLoading(false);
+                }
+              }}
+              disabled={googleLoading}
+              className="w-full flex items-center justify-center gap-2.5 bg-white hover:bg-slate-100 text-slate-900 font-semibold text-sm px-4 py-3 rounded-xl transition-all disabled:opacity-60 mb-3"
+            >
+              {googleLoading ? (
+                <div className="w-4 h-4 rounded-full border-2 border-slate-400 border-t-slate-900 animate-spin" />
+              ) : (
+                <svg width="18" height="18" viewBox="0 0 24 24">
+                  <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                  <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                  <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" />
+                  <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+                </svg>
+              )}
+              Continue with Google
+            </button>
+
+            <Link
+              href="/login?redirect=/zheat"
+              onClick={() => markPendingQuoteAndPersist()}
+              className="block w-full text-center text-sm text-slate-400 hover:text-cyan-400 py-2.5 transition-colors"
+            >
+              Use email &amp; password instead →
+            </Link>
+
+            <button
+              onClick={() => setShowLoginPrompt(false)}
+              className="mt-2 text-xs text-slate-600 hover:text-slate-400 transition-colors"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Adding pt-24 here pushes the entire dashboard content down, out from under the floating global navbar */}
       <div className="flex flex-col lg:flex-row min-h-screen pt-24">
 
@@ -1365,14 +1596,14 @@ export default function ZHeat() {
           <div className="p-4 border-b border-slate-700/30 space-y-3">
             <div className="grid grid-cols-3 gap-2">
               <div><label className={labelCls}>Length <span className="float-right font-mono text-[10px] text-slate-500">mm</span></label>
-                <input ref={bLRef} type="number" defaultValue="100" min="5" max="2000" step="1" onChange={lp} className={inputCls} /></div>
+                <input ref={bLRef} type="number" defaultValue="100" min="5" max="2000" step="1" onChange={() => { lp(); persistDraft(); }} className={inputCls} /></div>
               <div><label className={labelCls}>Width <span className="float-right font-mono text-[10px] text-slate-500">mm</span></label>
-                <input ref={bWRef} type="number" defaultValue="80" min="5" max="2000" step="1" onChange={lp} className={inputCls} /></div>
+                <input ref={bWRef} type="number" defaultValue="80" min="5" max="2000" step="1" onChange={() => { lp(); persistDraft(); }} className={inputCls} /></div>
               <div><label className={labelCls}>Total H <span className="float-right font-mono text-[10px] text-slate-500">mm</span></label>
-                <input ref={tHRef} type="number" defaultValue="45" min="5" max="500" step="1" onChange={lp} className={inputCls} /></div>
+                <input ref={tHRef} type="number" defaultValue="45" min="5" max="500" step="1" onChange={() => { lp(); persistDraft(); }} className={inputCls} /></div>
             </div>
             <div><label className={labelCls}>Base Plate Thickness <span className="float-right font-mono text-[10px] text-slate-500">mm</span></label>
-              <input ref={bHRef} type="number" defaultValue="5" min="1" max="100" step="0.5" onChange={lp} className={inputCls} /></div>
+              <input ref={bHRef} type="number" defaultValue="5" min="1" max="100" step="0.5" onChange={() => { lp(); persistDraft(); }} className={inputCls} /></div>
             <div>
               <label className={labelCls}>Material <span className="float-right font-mono text-[10px] text-cyan-500/70">{kNote}</span></label>
               <select ref={matRef} className={selectCls} onChange={() => {
@@ -1381,6 +1612,7 @@ export default function ZHeat() {
                 const isCustom = m.value === "custom";
                 setShowCustomK(isCustom);
                 setKNote(isCustom ? "custom" : `k = ${m.value} W/m.K`);
+                persistDraft();
               }}>
                 <option value="205">Aluminium 6061-T6 -- 205 W/m.K</option>
                 <option value="237">Aluminium 1050-H14 -- 237 W/m.K</option>
@@ -1394,7 +1626,7 @@ export default function ZHeat() {
             </div>
             {showCustomK && (
               <div><label className={labelCls}>Custom k <span className="float-right font-mono text-[10px] text-slate-500">W/m.K</span></label>
-                <input ref={ckRef} type="number" defaultValue="200" min="1" max="3000" step="1" className={inputCls} /></div>
+                <input ref={ckRef} type="number" defaultValue="200" min="1" max="3000" step="1" onChange={() => persistDraft()} className={inputCls} /></div>
             )}
           </div>
 
@@ -1408,7 +1640,7 @@ export default function ZHeat() {
               {(["longitudinal", "pin-inline", "pin-staggered", "conical-inline", "conical-staggered", "polygon-inline", "polygon-staggered"] as FinType[]).map(type => (
                 <button key={type} onClick={() => {
                   setS(prev => ({ ...prev, fin: type }));
-                  setTimeout(lp, 10);
+                  persistDraft({ fin: type });
                 }} className={`rounded-xl p-2 border transition-all duration-200 flex flex-col items-center gap-1 ${S.fin === type ? "border-cyan-500/40 bg-cyan-500/10 shadow-[0_0_16px_rgba(6,182,212,0.15)]" : "border-slate-700/50 bg-slate-900/30 hover:border-cyan-500/20 hover:bg-slate-800/40"}`}>
                   {FinIcons[type]}
                   <span className="text-[9px] text-center leading-tight text-slate-400" style={{ fontSize: "9px" }}>{type.replace(/-/g, " ").replace("inline", "inline").replace("staggered", "stag.")}</span>
@@ -1422,7 +1654,7 @@ export default function ZHeat() {
                 <label className="block text-xs font-medium text-slate-400 mb-2">Cross-Section Shape</label>
                 <div className="flex flex-wrap gap-1.5">
                   {[[3, "△ Triangle"], [4, "□ Square"], [5, "Pentagon"], [6, "Hexagon"], [8, "Octagon"]].map(([n, label]) => (
-                    <button key={n} onClick={() => setS(prev => ({ ...prev, poly: n as number }))}
+                    <button key={n} onClick={() => { setS(prev => ({ ...prev, poly: n as number })); persistDraft({ poly: n }); }}
                       className={`px-3 py-1 rounded-full text-[10px] font-mono border transition-all ${S.poly === n ? "bg-cyan-500/15 border-cyan-500/40 text-cyan-300" : "bg-slate-900/40 border-slate-700/50 text-slate-400 hover:border-cyan-500/20"}`}>
                       {label}
                     </button>
@@ -1437,7 +1669,7 @@ export default function ZHeat() {
                 <label className="block text-xs font-medium text-slate-400 mb-2">Row Offset</label>
                 <div className="flex gap-2">
                   {(["half", "third"] as StagType[]).map(t => (
-                    <button key={t} onClick={() => setS(prev => ({ ...prev, stag: t }))}
+                    <button key={t} onClick={() => { setS(prev => ({ ...prev, stag: t })); persistDraft({ stag: t }); }}
                       className={`px-3 py-1 rounded-full text-[10px] font-mono border transition-all ${S.stag === t ? "bg-cyan-500/15 border-cyan-500/40 text-cyan-300" : "bg-slate-900/40 border-slate-700/50 text-slate-400 hover:border-cyan-500/20"}`}>
                       {t === "half" ? "1/2 Pitch" : "1/3 Pitch"}
                     </button>
@@ -1455,23 +1687,23 @@ export default function ZHeat() {
           <div className="p-4 border-b border-slate-700/30 space-y-3">
             <div className="grid grid-cols-2 gap-2">
               <div><label className={labelCls}>Fin Height <span className="float-right font-mono text-[10px] text-slate-500">mm</span></label>
-                <input ref={fHRef} type="number" defaultValue="38" min="1" max="500" step="0.5" onChange={lp} className={inputCls} /></div>
+                <input ref={fHRef} type="number" defaultValue="38" min="1" max="500" step="0.5" onChange={() => { lp(); persistDraft(); }} className={inputCls} /></div>
               <div>
                 <label className={labelCls}>
                   {(S.fin.startsWith("pin") || S.fin.startsWith("conical")) ? "Pin/Inscribed Dia." : "Fin Thickness"}
                   <span className="float-right font-mono text-[10px] text-slate-500">mm</span>
                 </label>
-                <input ref={fTRef} type="number" defaultValue="2.0" min="0.1" max="100" step="0.1" onChange={lp} className={inputCls} />
+                <input ref={fTRef} type="number" defaultValue="2.0" min="0.1" max="100" step="0.1" onChange={() => { lp(); persistDraft(); }} className={inputCls} />
               </div>
             </div>
             {(S.fin.startsWith("pin") || S.fin.startsWith("conical") || S.fin.startsWith("polygon")) && (
               <div><label className={labelCls}>Base Diameter (⌀) <span className="float-right font-mono text-[10px] text-slate-500">mm</span></label>
-                <input ref={pDRef} type="number" defaultValue="5" min="0.5" max="100" step="0.5" onChange={lp} className={inputCls} /></div>
+                <input ref={pDRef} type="number" defaultValue="5" min="0.5" max="100" step="0.5" onChange={() => { lp(); persistDraft(); }} className={inputCls} /></div>
             )}
             <div>
               <label className={labelCls}>Taper Ratio (tip / base) <span className="float-right font-mono text-[10px] text-slate-500">1.0 = uniform</span></label>
               <div className="flex items-center gap-3">
-                <input ref={taperRef} type="range" min="0.05" max="1.0" step="0.05" defaultValue="1.0" onChange={e => { setTaperVal(parseFloat(e.target.value).toFixed(2)); lp(); }} className="flex-1 accent-cyan-500 cursor-pointer" />
+                <input ref={taperRef} type="range" min="0.05" max="1.0" step="0.05" defaultValue="1.0" onChange={e => { setTaperVal(parseFloat(e.target.value).toFixed(2)); lp(); persistDraft(); }} className="flex-1 accent-cyan-500 cursor-pointer" />
                 <span className="font-mono text-sm font-bold text-cyan-400 min-w-[40px] text-right">{taperVal}</span>
               </div>
             </div>
@@ -1481,17 +1713,17 @@ export default function ZHeat() {
                   {(S.fin.startsWith("pin") || S.fin.startsWith("conical")) ? "Pins (along L)" : "No. of Fins (L)"}
                   <span className="float-right font-mono text-[10px] text-slate-500">--</span>
                 </label>
-                <input ref={nLRef} type="number" defaultValue="10" min="1" max="500" step="1" onChange={lp} className={inputCls} />
+                <input ref={nLRef} type="number" defaultValue="10" min="1" max="500" step="1" onChange={() => { lp(); persistDraft(); }} className={inputCls} />
               </div>
               {(S.fin.startsWith("pin") || S.fin.startsWith("conical") || S.fin.startsWith("polygon")) && (
                 <div><label className={labelCls}>No. of Fins (W) <span className="float-right font-mono text-[10px] text-slate-500">--</span></label>
-                  <input ref={nWRef} type="number" defaultValue="8" min="1" max="500" step="1" onChange={lp} className={inputCls} /></div>
+                  <input ref={nWRef} type="number" defaultValue="8" min="1" max="500" step="1" onChange={() => { lp(); persistDraft(); }} className={inputCls} /></div>
               )}
             </div>
             <div>
               <label className={labelCls}>Pitch (centre-to-centre) <span className="float-right font-mono text-[10px] text-cyan-500/70">{pitchNote}</span></label>
               <input ref={pitchRef} type="number" defaultValue="0" min="0" max="500" step="0.5" placeholder="0 = auto"
-                onChange={e => setPitchNote(parseFloat(e.target.value) > 0 ? `${e.target.value}mm` : "auto")} className={inputCls} />
+                onChange={e => { setPitchNote(parseFloat(e.target.value) > 0 ? `${e.target.value}mm` : "auto"); persistDraft(); }} className={inputCls} />
             </div>
           </div>
 
@@ -1503,12 +1735,12 @@ export default function ZHeat() {
           <div className="p-4 border-b border-slate-700/30 space-y-3">
             <div className="grid grid-cols-2 gap-2">
               <div><label className={labelCls}>Heat Input Q <span className="float-right font-mono text-[10px] text-slate-500">W</span></label>
-                <input ref={QRef} type="number" defaultValue="50" min="0.01" max="100000" step="1" className={inputCls} /></div>
+                <input ref={QRef} type="number" defaultValue="50" min="0.01" max="100000" step="1" onChange={() => persistDraft()} className={inputCls} /></div>
               <div><label className={labelCls}>Ambient T∞ <span className="float-right font-mono text-[10px] text-slate-500"> °C</span></label>
-                <input ref={TaRef} type="number" defaultValue="25" min="-60" max="300" step="1" className={inputCls} /></div>
+                <input ref={TaRef} type="number" defaultValue="25" min="-60" max="300" step="1" onChange={() => persistDraft()} className={inputCls} /></div>
             </div>
             <div><label className={labelCls}>Conv. Coefficient h <span className="float-right font-mono text-[10px] text-slate-500">W/m²·K</span></label>
-              <input ref={hvRef} type="number" defaultValue="25" min="0.1" max="50000" step="1" className={inputCls} /></div>
+              <input ref={hvRef} type="number" defaultValue="25" min="0.1" max="50000" step="1" onChange={() => persistDraft()} className={inputCls} /></div>
             <div>
               <p className="text-[10px] text-slate-500 uppercase tracking-wider font-medium mb-2">Quick Presets</p>
               <div className="flex flex-wrap gap-1.5">
@@ -1529,16 +1761,16 @@ export default function ZHeat() {
           </div>
           <div className="p-4 border-b border-slate-700/30 space-y-3">
             <label className="flex items-center gap-3 cursor-pointer">
-              <input type="checkbox" checked={radEnabled} onChange={e => setRadEnabled(e.target.checked)} className="w-4 h-4 accent-cyan-500 cursor-pointer rounded" />
+              <input type="checkbox" checked={radEnabled} onChange={e => { setRadEnabled(e.target.checked); persistDraft({ radEnabled: e.target.checked }); }} className="w-4 h-4 accent-cyan-500 cursor-pointer rounded" />
               <span className="text-sm font-semibold text-slate-300">Enable Radiation Heat Transfer</span>
             </label>
             {radEnabled && (
               <div className="space-y-3 mt-3">
                 <div className="grid grid-cols-2 gap-2">
                   <div><label className={labelCls}>Emissivity eps<sub>r</sub> <span className="float-right font-mono text-[10px] text-slate-500">0-1</span></label>
-                    <input ref={emisRef} type="number" defaultValue="0.85" min="0.01" max="1.0" step="0.01" className={inputCls} /></div>
+                    <input ref={emisRef} type="number" defaultValue="0.85" min="0.01" max="1.0" step="0.01" onChange={() => persistDraft()} className={inputCls} /></div>
                   <div><label className={labelCls}>Radiation Sink T<sub>r</sub> <span className="float-right font-mono text-[10px] text-slate-500"> °C</span></label>
-                    <input ref={TrRef} type="number" defaultValue="25" min="-273" max="2000" step="1" className={inputCls} /></div>
+                    <input ref={TrRef} type="number" defaultValue="25" min="-273" max="2000" step="1" onChange={() => persistDraft()} className={inputCls} /></div>
                 </div>
                 <div>
                   <p className="text-[10px] text-slate-500 uppercase tracking-wider font-medium mb-2">Surface Emissivity Presets</p>
@@ -1565,6 +1797,11 @@ export default function ZHeat() {
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" /></svg>
               Compute Analysis
             </button>
+            <button onClick={clearAllData}
+              className="w-full flex items-center justify-center gap-2 bg-transparent border border-slate-700/60 text-slate-400 hover:text-red-400 hover:border-red-500/40 font-semibold text-xs px-4 py-2 rounded-xl transition-all">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14z" /></svg>
+              Clear All Data
+            </button>
             {errMsg && (
               <div className="bg-red-500/10 border border-red-500/30 rounded-xl px-3 py-2 text-xs text-red-400">{errMsg}</div>
             )}
@@ -1583,7 +1820,11 @@ export default function ZHeat() {
               </button> */}
             </div>
             {/* Quote Request Button */}
-            <button onClick={() => { if (!S.res) { alert("Please run Compute Analysis first."); return; } setQuoteSent(false); setShowQuoteModal(true); }}
+            <button onClick={() => {
+              if (!S.res) { alert("Please run Compute Analysis first."); return; }
+              if (!user) { setShowLoginPrompt(true); return; }
+              setQuoteSent(false); setShowQuoteModal(true);
+            }}
               className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-orange-600 to-amber-500 hover:from-orange-500 hover:to-amber-400 text-white font-bold text-sm px-6 py-3 rounded-xl transition-all shadow-[0_4px_24px_rgba(251,146,60,0.3)] hover:shadow-[0_6px_32px_rgba(251,146,60,0.45)] hover:-translate-y-0.5">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
               Request Manufacturing Quote

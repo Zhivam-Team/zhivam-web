@@ -13,7 +13,10 @@ import {
   PhoneAuthProvider,
   linkWithCredential,
   AuthCredential,
-  signInWithCredential
+  signInWithCredential,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  updateProfile,
 } from "firebase/auth";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import { getFirebase } from "@/lib/firebase";
@@ -23,7 +26,8 @@ export interface AuthUser {
   email: string | null;
   displayName: string | null;
   photoURL: string | null;
-  phoneNumber: string | null;
+  mobile: string | null;        // typed at signup — unverified
+  phoneNumber: string | null;   // Firebase-verified via OTP (added later)
   role: "user" | "admin";
   location: string;
 }
@@ -33,6 +37,8 @@ interface AuthContextType {
   loading: boolean;
   requirePhoneVerification: boolean;
   signInWithGoogle: () => Promise<User>;
+  signupWithEmail: (name: string, email: string, password: string, mobile: string) => Promise<User>;
+  loginWithEmail: (email: string, password: string) => Promise<User>;
   sendOTP: (phoneNumber: string, appVerifier: RecaptchaVerifier) => Promise<ConfirmationResult>;
   linkPhoneNumber: (confirmationResult: ConfirmationResult, otp: string) => Promise<void>;
   signOut: () => Promise<void>;
@@ -46,22 +52,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [requirePhoneVerification, setRequirePhoneVerification] = useState(false);
   const [pendingGoogleCredential, setPendingGoogleCredential] = useState<AuthCredential | null>(null);
 
-  const establishSessionAndProfile = async (currentUser: User) => {
+  const establishSessionAndProfile = async (
+    currentUser: User,
+    extra?: { mobile?: string }
+  ) => {
     const { db, auth } = getFirebase();
     if (!db || !auth) {
-        setLoading(false);
-        return;
-    }
-    
-    // Strict requirement: User MUST have BOTH a verified email (usually from Google) and a phone number
-    if (!currentUser.email || !currentUser.phoneNumber) {
-      setRequirePhoneVerification(true);
-      setUser(null);
       setLoading(false);
-      // Reject any further database or session initialization!
-      throw new Error("INCOMPLETE_PROFILE");
+      return;
     }
 
+    // TODO (Phase 2): re-enable mandatory phone verification here once OTP flow is added back.
+    // if (!currentUser.email || !currentUser.phoneNumber) {
+    //   setRequirePhoneVerification(true);
+    //   setUser(null);
+    //   setLoading(false);
+    //   throw new Error("INCOMPLETE_PROFILE");
+    // }
     setRequirePhoneVerification(false);
 
     try {
@@ -77,20 +84,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           email: currentUser.email,
           displayName: currentUser.displayName || null,
           photoURL: currentUser.photoURL || null,
+          mobile: extra?.mobile || null,
           phoneNumber: currentUser.phoneNumber,
-          role: role,
+          role,
           location: "",
         };
 
-        // Write ONLY after fully vetted
         await setDoc(userRef, {
           ...authUser,
-          createdAt: new Date().toISOString()
+          createdAt: new Date().toISOString(),
         });
       } else {
         const data = userSnap.data();
-        let needsMerge = false;
         const mergeData: Partial<AuthUser> = {};
+        let needsMerge = false;
 
         if (currentUser.phoneNumber && currentUser.phoneNumber !== data.phoneNumber) {
           mergeData.phoneNumber = currentUser.phoneNumber;
@@ -98,6 +105,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
         if (currentUser.photoURL && currentUser.photoURL !== data.photoURL) {
           mergeData.photoURL = currentUser.photoURL;
+          needsMerge = true;
+        }
+        if (extra?.mobile && extra.mobile !== data.mobile) {
+          mergeData.mobile = extra.mobile;
           needsMerge = true;
         }
 
@@ -110,6 +121,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           email: data.email || currentUser.email,
           displayName: data.displayName || currentUser.displayName || null,
           photoURL: mergeData.photoURL || data.photoURL || null,
+          mobile: mergeData.mobile || data.mobile || null,
           phoneNumber: mergeData.phoneNumber || data.phoneNumber || currentUser.phoneNumber,
           role: data.role || role,
           location: data.location || "",
@@ -118,14 +130,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       setUser(authUser);
 
-      // Establish secure backend session cookie strictly after profile is confirmed
       const idToken = await currentUser.getIdToken();
       await fetch("/api/auth/session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ idToken }),
       });
-      
     } catch (e) {
       console.error("Failed to set session and profile", e);
     } finally {
@@ -139,7 +149,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(false);
       return;
     }
-    
+
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       if (currentUser) {
         try {
@@ -168,12 +178,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const provider = new GoogleAuthProvider();
     provider.setCustomParameters({ prompt: "select_account" });
     const result = await signInWithPopup(auth, provider);
-    
-    // Store the Google credential to memory so we can execute a complex merge if the user's phone is taken
+
     const cred = GoogleAuthProvider.credentialFromResult(result);
     if (cred) setPendingGoogleCredential(cred);
-    
+
     return result.user;
+  };
+
+  const signupWithEmail = async (name: string, email: string, password: string, mobile: string) => {
+    const { auth } = getFirebase();
+    if (!auth) throw new Error("Firebase Auth not initialized");
+    const cred = await createUserWithEmailAndPassword(auth, email, password);
+    await updateProfile(cred.user, { displayName: name });
+    // onAuthStateChanged will also fire, but we call this directly first so `mobile` is captured immediately
+    await establishSessionAndProfile(cred.user, { mobile });
+    return cred.user;
+  };
+
+  const loginWithEmail = async (email: string, password: string) => {
+    const { auth } = getFirebase();
+    if (!auth) throw new Error("Firebase Auth not initialized");
+    const cred = await signInWithEmailAndPassword(auth, email, password);
+    return cred.user;
   };
 
   const sendOTP = async (phoneNumber: string, appVerifier: RecaptchaVerifier) => {
@@ -185,21 +211,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const linkPhoneNumber = async (confirmationResult: ConfirmationResult, otp: string) => {
     const { auth } = getFirebase();
     if (!auth?.currentUser) throw new Error("No active user to link phone to");
-    
+
     const credential = PhoneAuthProvider.credential(confirmationResult.verificationId, otp);
-    
+
     try {
       const result = await linkWithCredential(auth.currentUser, credential);
       await establishSessionAndProfile(result.user);
     } catch (error: any) {
       if (error.code === "auth/credential-already-in-use") {
         if (pendingGoogleCredential) {
-          console.log("Phone already heavily registered. Executing account merge...");
-          // 1. Sign into the existing Phone account
           const phoneUserResult = await signInWithCredential(auth, credential);
-          // 2. Link their active Google identity to the legacy phone account instead!
           const mergedResult = await linkWithCredential(phoneUserResult.user, pendingGoogleCredential);
-          // 3. Complete auth flow
           await establishSessionAndProfile(mergedResult.user);
         } else {
           throw new Error("Phone number already in use. Please sign in again.");
@@ -223,6 +245,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         loading,
         requirePhoneVerification,
         signInWithGoogle,
+        signupWithEmail,
+        loginWithEmail,
         sendOTP,
         linkPhoneNumber,
         signOut,

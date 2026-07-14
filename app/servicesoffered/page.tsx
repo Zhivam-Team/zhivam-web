@@ -7,8 +7,8 @@ import { motion } from "framer-motion";
 import { ShoppingCart, Heart, ShieldAlert } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useAdminMode } from "@/app/contexts/AdminModeContext";
-import { useCart } from "@/app/contexts/CartContext";
+import { useAdminMode } from "@/app/context/AdminModeContext";
+import { useCart } from "@/app/context/CartContext";
 import { useFavourites } from "@/hooks/useFavourites";
 import { ServiceData } from "@/app/admin/services/page";
 import ServicesSection from "@/app/components/ServicesSection"; // R&D services

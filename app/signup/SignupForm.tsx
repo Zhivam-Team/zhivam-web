@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { User, Mail, Lock, Phone, LogIn, Eye, EyeOff, AlertTriangle } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/app/contexts/AuthContext";
+import { useAuth } from "@/context/AuthContext";
 
 const fadeUp = (delay = 0) => ({
     initial: { opacity: 0, y: 20 },
@@ -25,7 +25,7 @@ export default function SignupForm() {
     const [focused, setFocused] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
 
-    const { signupWithEmail, loginWithGoogle } = useAuth();
+    const { signupWithEmail, signInWithGoogle } = useAuth();
     const router = useRouter();
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -62,7 +62,7 @@ export default function SignupForm() {
         setError("");
         setLoading(true);
         try {
-            await loginWithGoogle();
+            await signInWithGoogle();
             router.push("/dashboard");
         } catch {
             setError("Something went wrong. Please try again.");

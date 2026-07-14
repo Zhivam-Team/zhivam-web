@@ -1,6 +1,5 @@
-import SignupForm from './SignupForm'; // Import the component from the same folder
+import SignupForm from "./SignupForm";
 
-export default function LoginPage() {
-    // This page's only job is to render the LoginForm component.
+export default function SignupPage() {
     return <SignupForm />;
 }

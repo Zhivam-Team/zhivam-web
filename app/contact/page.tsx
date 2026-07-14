@@ -200,115 +200,40 @@ export default function ContactPage() {
                 <div className="absolute bottom-0 right-0 w-[400px] h-[400px] rounded-full bg-indigo-500/5 blur-[100px]" />
             </div>
 
-            <div className="relative w-full max-w-5xl flex flex-col lg:flex-row gap-10 lg:gap-16 items-start">
+            <div
+                className="relative w-full max-w-5xl grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-start
+                [grid-template-areas:'header'_'form'_'address']
+                lg:[grid-template-areas:'header_form'_'address_form']"
+            >
 
-                {/* ── LEFT PANEL ── */}
-                <div className="flex-1 lg:sticky lg:top-28 space-y-0">
-
-                    {/* Headline block */}
-                    <div>
-                        <motion.div {...fadeUp(0)} className="inline-flex items-center gap-2 text-xs font-medium text-cyan-400 bg-cyan-400/10 border border-cyan-400/20 rounded-full px-3 py-1 mb-6">
-                            <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
-                            Available for projects
-                        </motion.div>
-
-                        <motion.h1 {...fadeUp(0.1)} className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight leading-none">
-                            Let&apos;s <br />
-                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-indigo-400">
-                                work together
-                            </span>
-                        </motion.h1>
-
-                        <motion.p {...fadeUp(0.2)} className="text-slate-400 mt-5 text-sm sm:text-base leading-relaxed max-w-xs">
-                            Have a project or question? Drop us a message and we&apos;ll get back to you within 24 hours.
-                        </motion.p>
-
-                        <SocialLinks />
-                    </div>
-
-                    {/* Quick contact row */}
-                    <motion.div {...fadeUp(0.8)} className="mt-10 pt-10 border-t border-slate-800 space-y-3">
-                        {[
-                            { label: "Email", value: "info@zhivam.com" },
-                            { label: "Contact", value: "+91 833 385 0202" },
-                            { label: "Based in", value: "India" },
-                        ].map((item) => (
-                            <div key={item.label} className="flex items-center gap-3 text-sm">
-                                <span className="text-slate-500 w-16 shrink-0">{item.label}</span>
-                                <span className="text-slate-300 break-words">{item.value}</span>
-                            </div>
-                        ))}
+                {/* ── HEADER + SOCIALS (mobile: 1st, desktop: top-left) ── */}
+                <div className="[grid-area:header] lg:sticky lg:top-28">
+                    <motion.div {...fadeUp(0)} className="inline-flex items-center gap-2 text-xs font-medium text-cyan-400 bg-cyan-400/10 border border-cyan-400/20 rounded-full px-3 py-1 mb-6">
+                        <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+                        Available for projects
                     </motion.div>
 
-                    {/* ── Office Cards ── */}
-                    <motion.div {...fadeUp(1.0)} className="mt-10 space-y-4">
+                    <motion.h1 {...fadeUp(0.1)} className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight leading-none">
+                        Let&apos;s <br />
+                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-indigo-400">
+                            work together
+                        </span>
+                    </motion.h1>
 
-                        {/* Vijayawada HQ */}
-                        <div className="rounded-2xl border border-slate-700/60 bg-slate-900/40 p-4 sm:p-5">
-                            <div className="text-[10px] font-semibold uppercase tracking-widest text-cyan-400 mb-1">Headquarters</div>
-                            <h3 className="text-sm font-semibold text-white mb-4">Vijayawada Office</h3>
+                    <motion.p {...fadeUp(0.2)} className="text-slate-400 mt-5 text-sm sm:text-base leading-relaxed max-w-xs">
+                        Have a project or question? Drop us a message and we&apos;ll get back to you within 24 hours.
+                    </motion.p>
 
-                            <InfoRow icon={<IconLocation />} label="Registered Address">
-                                9-65-41/A Sykamvari Street, I Floor,<br />
-                                Kothapet, Chittinagar,<br />
-                                Vijayawada (Urban), Krishna — 520001<br />
-                                Andhra Pradesh, India
-                            </InfoRow>
-
-                            <InfoRow icon={<IconPhone />} label="Phone">
-                                <a href="tel:+918333850202" className="hover:text-cyan-400 transition-colors">+91 833 385 0202</a>
-                            </InfoRow>
-
-                            <InfoRow icon={<IconMail />} label="Email">
-                                <a href="mailto:support@zhivam.com" className="hover:text-cyan-400 transition-colors">support@zhivam.com</a><br />
-                                <a href="mailto:info@zhivam.com" className="hover:text-cyan-400 transition-colors">info@zhivam.com</a>
-                            </InfoRow>
-                        </div>
-
-                        {/* Kattankulathur Branch */}
-                        <div className="rounded-2xl border border-slate-700/60 bg-slate-900/40 p-4 sm:p-5">
-                            <div className="text-[10px] font-semibold uppercase tracking-widest text-cyan-400 mb-1">Branch Office</div>
-                            <h3 className="text-sm font-semibold text-white mb-4">Kattankulathur Office</h3>
-
-                            <InfoRow icon={<IconLocation />} label="Branch Address">
-                                Second Floor, Center For Electric Mobility,<br />
-                                Potheri, SRM Nagar,<br />
-                                Kattankulathur — 603203<br />
-                                Tamil Nadu, India
-                            </InfoRow>
-
-                            <InfoRow icon={<IconClock />} label="Business Hours">
-                                Mon – Fri: 9:00 AM – 6:00 PM IST<br />
-                                Saturday: 10:00 AM – 2:00 PM IST
-                            </InfoRow>
-
-                            {/* Service badges
-                            <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-slate-700/50">
-                                {["⚡ Thermal Engineering", "🔋 Battery Systems", "📐 Simulation", "🌱 Renewables"].map((badge) => (
-                                    <span key={badge} className="text-[11px] font-medium text-cyan-400 bg-cyan-400/10 border border-cyan-400/20 rounded-full px-2.5 py-1">
-                                        {badge}
-                                    </span>
-                                ))}
-                            </div> */}
-
-                            {/* Legal notice */}
-                            <div className="mt-4 rounded-xl border-l-2 border-cyan-400/50 bg-cyan-400/5 px-4 py-3 text-xs text-slate-400 leading-relaxed">
-                                <span className="text-cyan-400 font-semibold">Note for Clients: </span>
-                                For billing disputes, refund requests, or legal correspondence, please write to{" "}
-                                <a href="mailto:info@zhivam.com" className="text-cyan-400 hover:underline">info@zhivam.com</a>{" "}
-                                quoting your order/project ID.
-                            </div>
-                        </div>
-                    </motion.div>
+                    <SocialLinks />
                 </div>
 
-                {/* ── FORM ── */}
+                {/* ── FORM (mobile: 2nd, desktop: right column) ── */}
                 <motion.form
                     onSubmit={handleSubmit}
                     variants={stagger}
                     initial="initial"
                     animate="animate"
-                    className="flex-1 w-full space-y-5 rounded-2xl border border-slate-800/80 bg-slate-950/20 p-4 sm:p-0 sm:border-0 sm:bg-transparent"
+                    className="[grid-area:form] w-full space-y-5 rounded-2xl border border-slate-800/80 bg-slate-950/20 p-4 sm:p-0 sm:border-0 sm:bg-transparent"
                 >
                     {/* Name */}
                     <motion.div variants={fadeUp(0)}>
@@ -485,7 +410,6 @@ export default function ContactPage() {
                             <a href="/privacy-policy" className="text-cyan-400 hover:underline">Privacy Policy</a>.
                         </p>
 
-                        {/* Success message */}
                         {submitStatus === 'success' && (
                             <motion.div
                                 initial={{ opacity: 0, y: 10 }}
@@ -496,7 +420,6 @@ export default function ContactPage() {
                             </motion.div>
                         )}
 
-                        {/* Error message */}
                         {submitStatus === 'error' && (
                             <motion.div
                                 initial={{ opacity: 0, y: 10 }}
@@ -508,6 +431,72 @@ export default function ContactPage() {
                         )}
                     </motion.div>
                 </motion.form>
+
+                {/* ── QUICK CONTACT + OFFICE CARDS (mobile: 3rd/last, desktop: bottom-left) ── */}
+                <motion.div {...fadeUp(0.8)} className="[grid-area:address] lg:sticky lg:top-28 pt-10 border-t border-slate-800 lg:mt-0">
+                    <div className="space-y-3">
+                        {[
+                            { label: "Email", value: "info@zhivam.com" },
+                            { label: "Contact", value: "+91 833 385 0202" },
+                            { label: "Based in", value: "India" },
+                        ].map((item) => (
+                            <div key={item.label} className="flex items-center gap-3 text-sm">
+                                <span className="text-slate-500 w-16 shrink-0">{item.label}</span>
+                                <span className="text-slate-300 break-words">{item.value}</span>
+                            </div>
+                        ))}
+                    </div>
+
+                    <div className="mt-10 space-y-4">
+                        {/* Vijayawada HQ */}
+                        <div className="rounded-2xl border border-slate-700/60 bg-slate-900/40 p-4 sm:p-5">
+                            <div className="text-[10px] font-semibold uppercase tracking-widest text-cyan-400 mb-1">Headquarters</div>
+                            <h3 className="text-sm font-semibold text-white mb-4">Vijayawada Office</h3>
+
+                            <InfoRow icon={<IconLocation />} label="Registered Address">
+                                9-65-41/A Sykamvari Street, I Floor,<br />
+                                Kothapet, Chittinagar,<br />
+                                Vijayawada (Urban), Krishna — 520001<br />
+                                Andhra Pradesh, India
+                            </InfoRow>
+
+                            <InfoRow icon={<IconPhone />} label="Phone">
+                                <a href="tel:+918333850202" className="hover:text-cyan-400 transition-colors">+91 833 385 0202</a>
+                            </InfoRow>
+
+                            <InfoRow icon={<IconMail />} label="Email">
+                                <a href="mailto:support@zhivam.com" className="hover:text-cyan-400 transition-colors">support@zhivam.com</a><br />
+                                <a href="mailto:info@zhivam.com" className="hover:text-cyan-400 transition-colors">info@zhivam.com</a>
+                            </InfoRow>
+                        </div>
+
+                        {/* Kattankulathur Branch */}
+                        <div className="rounded-2xl border border-slate-700/60 bg-slate-900/40 p-4 sm:p-5">
+                            <div className="text-[10px] font-semibold uppercase tracking-widest text-cyan-400 mb-1">Branch Office</div>
+                            <h3 className="text-sm font-semibold text-white mb-4">Kattankulathur Office</h3>
+
+                            <InfoRow icon={<IconLocation />} label="Branch Address">
+                                Second Floor, Center For Electric Mobility,<br />
+                                Potheri, SRM Nagar,<br />
+                                Kattankulathur — 603203<br />
+                                Tamil Nadu, India
+                            </InfoRow>
+
+                            <InfoRow icon={<IconClock />} label="Business Hours">
+                                Mon – Fri: 9:00 AM – 6:00 PM IST<br />
+                                Saturday: 10:00 AM – 2:00 PM IST
+                            </InfoRow>
+
+                            {/* Legal notice */}
+                            <div className="mt-4 rounded-xl border-l-2 border-cyan-400/50 bg-cyan-400/5 px-4 py-3 text-xs text-slate-400 leading-relaxed">
+                                <span className="text-cyan-400 font-semibold">Note for Clients: </span>
+                                For billing disputes, refund requests, or legal correspondence, please write to{" "}
+                                <a href="mailto:info@zhivam.com" className="text-cyan-400 hover:underline">info@zhivam.com</a>{" "}
+                                quoting your order/project ID.
+                            </div>
+                        </div>
+                    </div>
+                </motion.div>
             </div>
         </main>
     );

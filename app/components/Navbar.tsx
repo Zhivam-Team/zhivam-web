@@ -15,12 +15,38 @@ import {
     UserPlus,
     LogIn,
 } from "lucide-react";
-import { useCart } from "@/app/contexts/CartContext";
+import { useCart } from "@/app/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 import { useState, useRef, useEffect } from "react";
 import { rdServices } from "@/lib/servicesData";
 import { usePathname } from "next/navigation";
 import { client } from "@/lib/sanity";
+
+function Avatar({ photoURL, displayName, email, size = "w-6 h-6" }: {
+    photoURL?: string | null;
+    displayName?: string | null;
+    email?: string | null;
+    size?: string;
+}) {
+    const [imgError, setImgError] = useState(false);
+
+    if (photoURL && !imgError) {
+        return (
+            <img
+                src={photoURL}
+                alt="Profile"
+                className={`${size} rounded-full object-cover`}
+                onError={() => setImgError(true)}
+            />
+        );
+    }
+
+    return (
+        <div className={`${size} rounded-full bg-cyan-500/20 flex items-center justify-center text-cyan-400 text-xs font-bold border border-cyan-500/30`}>
+            {displayName?.charAt(0) || email?.charAt(0) || "U"}
+        </div>
+    );
+}
 
 type BlogResult = {
     title: string;
@@ -262,7 +288,7 @@ export default function Navbar() {
                                     <Link
                                         href={item.dropdown ? "#" : item.href}
                                         ref={(el) => { linkRefs.current[item.href] = el; }}
-                                        className="relative px-5 py-2 text-sm rounded-full z-10 transition-colors duration-200 flex items-center justify-center"
+                                        className="relative px-5 py-1 text-sm rounded-full z-10 transition-colors duration-200 flex items-center justify-center"
                                     >
                                         <span className={isActive ? "text-cyan-400" : "text-slate-400 group-hover:text-white transition-colors"}>
                                             {item.name}
@@ -323,7 +349,7 @@ export default function Navbar() {
                         <Search className="w-[18px] h-[18px]" />
                     </button>
 
-                    {/* CART */}
+                    {/* CART
                     <button
                         ref={cartIconRef}
                         onClick={() => setIsDrawerOpen(true)}
@@ -336,7 +362,7 @@ export default function Navbar() {
                                 {cartCount}
                             </span>
                         )}
-                    </button>
+                    </button> */}
 
                     {/* MOBILE CHEVRON */}
                     <button
@@ -361,20 +387,14 @@ export default function Navbar() {
                             onMouseLeave={() => handleMouseLeave()}
                         >
                             <button className="hidden md:flex items-center gap-2 bg-slate-800/50 border border-slate-700/50 rounded-full pl-2 pr-4 py-1.5 transition-all hover:bg-slate-700/50">
-                                {user?.photoURL ? (
-                                    <img src={user.photoURL} alt="Profile" className="w-6 h-6 rounded-full" />
-                                ) : (
-                                    <div className="w-6 h-6 rounded-full bg-cyan-500/20 flex items-center justify-center text-cyan-400 text-xs font-bold">
-                                        {user?.displayName?.charAt(0) || user?.email?.charAt(0) || "U"}
-                                    </div>
-                                )}
+                                <Avatar photoURL={user?.photoURL} displayName={user?.displayName} email={user?.email} size="w-6 h-6" />
                                 <div className="flex flex-col items-start px-1 leading-none">
                                     <span className="text-sm font-medium text-white">{user?.displayName || "User"}</span>
                                     {user?.location && <span className="text-xs text-slate-400 mt-0.5">{user.location}</span>}
                                 </div>
                                 <ChevronDown className="w-3.5 h-3.5 text-slate-400 ml-1" />
                             </button>
-                            
+
                             <AnimatePresence>
                                 {dropdownOpen === "profile" && (
                                     <motion.div
@@ -382,22 +402,22 @@ export default function Navbar() {
                                         animate={{ opacity: 1, y: 0, scale: 1 }}
                                         exit={{ opacity: 0, y: 5, scale: 0.95 }}
                                         transition={{ duration: 0.15, ease: "easeOut" }}
-                                        className="absolute top-full right-0 pt-4 z-50 w-48"
+                                        className="absolute top-full right-0 pt-5 z-50 w-48"
                                     >
                                         <div className="bg-[#0d1520] border border-slate-700/60 rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.5)] overflow-hidden py-2">
-                                            <Link href="/profile" className="block px-5 py-2.5 text-sm text-slate-400 hover:bg-slate-800/60 hover:text-cyan-400 transition-colors cursor-pointer">
-                                                Profile
+                                            <Link href="/dashboard/quotes" className="flex items-center gap-2.5 px-5 py-2.5 text-sm text-slate-400 hover:bg-slate-800/60 hover:text-cyan-400 transition-colors cursor-pointer">
+                                                <FileText className="w-4 h-4" /> My Quotes
                                             </Link>
                                             {user?.role === "admin" && (
-                                                <Link href="/admin" className="block px-5 py-2.5 text-sm text-slate-400 hover:bg-slate-800/60 hover:text-cyan-400 transition-colors cursor-pointer">
-                                                    Admin Panel
+                                                <Link href="/admin" className="flex items-center gap-2.5 px-5 py-2.5 text-sm text-slate-400 hover:bg-slate-800/60 hover:text-cyan-400 transition-colors cursor-pointer">
+                                                    <UserPlus className="w-4 h-4" /> Admin Panel
                                                 </Link>
                                             )}
-                                            <button 
+                                            <button
                                                 onClick={() => signOut()}
-                                                className="w-full text-left block px-5 py-2.5 text-sm text-red-400 hover:bg-slate-800/60 hover:text-red-300 transition-colors cursor-pointer"
+                                                className="w-full text-left flex items-center gap-2.5 px-5 py-2.5 text-sm text-red-400 hover:bg-slate-800/60 hover:text-red-300 transition-colors cursor-pointer"
                                             >
-                                                Sign Out
+                                                <LogIn className="w-4 h-4 rotate-180" /> Sign Out
                                             </button>
                                         </div>
                                     </motion.div>
@@ -406,7 +426,7 @@ export default function Navbar() {
                         </div>
                     ) : (
                         <Link
-                            href="/auth"
+                            href="/login"
                             className="hidden md:flex items-center gap-1.5 bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/20 hover:border-cyan-400/60 rounded-full px-4 py-2 text-sm font-medium transition-all duration-200"
                         >
                             Login <ArrowRight className="w-3.5 h-3.5" />
@@ -472,7 +492,7 @@ export default function Navbar() {
                                             <Wrench className="w-3.5 h-3.5 text-amber-400 shrink-0" />
                                         )}
                                         <div>
-                                                <p className="text-sm text-white leading-snug">{item.title}</p>
+                                            <p className="text-sm text-white leading-snug">{item.title}</p>
                                             <p className="text-xs text-slate-500">
                                                 {item.type === "blog"
                                                     ? `Blog · ${item.category ?? ""}`
@@ -572,13 +592,7 @@ export default function Navbar() {
                     {user ? (
                         <div className="flex flex-col border-t border-slate-700/50 mt-2 pt-2">
                             <div className="px-4 py-3 flex items-center gap-3">
-                                {user?.photoURL ? (
-                                    <img src={user.photoURL} alt="Profile" className="w-10 h-10 rounded-full object-cover border border-slate-700/50" />
-                                ) : (
-                                    <div className="w-10 h-10 rounded-full bg-cyan-500/20 flex items-center justify-center text-cyan-400 font-bold text-lg border border-cyan-500/30">
-                                        {user?.displayName?.charAt(0) || user?.email?.charAt(0) || "U"}
-                                    </div>
-                                )}
+                                <Avatar photoURL={user?.photoURL} displayName={user?.displayName} email={user?.email} size="w-10 h-10" />
                                 <div>
                                     <p className="text-sm font-medium text-white">{user?.displayName || "User"}</p>
                                     <p className="text-xs text-slate-400">{user?.email}</p>
@@ -586,11 +600,11 @@ export default function Navbar() {
                                 </div>
                             </div>
                             <Link
-                                href="/profile"
+                                href="/dashboard/quotes"
                                 onClick={() => setMobileOpen(false)}
                                 className="px-4 py-3 text-sm text-slate-300 hover:bg-slate-700/40 hover:text-white transition-colors flex items-center gap-2"
                             >
-                                <UserIcon className="w-4 h-4" /> Profile
+                                <FileText className="w-4 h-4" /> My Quotes
                             </Link>
                             {user?.role === "admin" && (
                                 <Link

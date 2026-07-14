@@ -4,6 +4,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import nodemailer from "nodemailer";
 import { google } from "googleapis";
+import { randomInt } from "crypto";
+
+function generateQuoteId(): string {
+    const timestamp = Date.now();               // 13 digits
+    const random = randomInt(100000, 999999);    // 6 digits
+    return `Q-${timestamp}${random}`;
+}
 
 // ─── Google Sheets helper ─────────────────────────────────────────────────────
 async function appendToSheet(quote: QuotePayload) {
@@ -36,7 +43,7 @@ async function appendToSheet(quote: QuotePayload) {
                     "No. of Fins", "Material", "k (W/m·K)",
                     "Heat Input Q (W)", "Conv. Coeff h", "Ambient T (°C)",
                     "Fin Efficiency η (%)", "Effectiveness ε", "T_base (°C)", "T_tip (°C)", "Rθ (°C/W)",
-                    "Customer Notes", "Admin Notes"
+                    "Customer Notes", "Admin Notes", "User ID"
                 ]]
             }
         });
@@ -80,6 +87,7 @@ async function appendToSheet(quote: QuotePayload) {
                 quote.thermal?.R?.toFixed(5) || "",
                 quote.contact.notes || "",
                 "", // Admin Notes — filled from dashboard
+                quote.uid || "",
             ]]
         }
     });
@@ -196,6 +204,7 @@ async function sendNotificationEmail(quote: QuotePayload) {
 interface QuotePayload {
     id: string;
     submittedAt: string;
+    uid?: string | null;
     contact: {
         name: string; email: string; company?: string; phone?: string;
         qty: string; finish: string; notes?: string;
@@ -222,7 +231,7 @@ export async function POST(req: NextRequest) {
         }
 
         // Assign ID and timestamp if not provided
-        if (!quote.id) quote.id = `Q-${Date.now()}`;
+        quote.id = generateQuoteId(); // always server-generated — ignore any client-supplied id
         if (!quote.submittedAt) quote.submittedAt = new Date().toISOString();
 
         // Run Sheets + Email in parallel

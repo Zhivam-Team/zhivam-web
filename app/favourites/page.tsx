@@ -5,7 +5,7 @@ import { getFirebase } from "@/lib/firebase";
 import { collection, query, where, getDocs } from "firebase/firestore";
 import { useAuth } from "@/context/AuthContext";
 import { useFavourites, FavouriteItem } from "@/hooks/useFavourites";
-import { useCart } from "@/app/contexts/CartContext";
+import { useCart } from "@/app/context/CartContext";
 import { useRouter } from "next/navigation";
 import { Heart, ShoppingCart, Loader2, Info } from "lucide-react";
 import Image from "next/image";

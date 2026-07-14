@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useAdminGuard } from "@/hooks/useAdminGuard";
-import { useAdminMode } from "@/app/contexts/AdminModeContext";
+import { useAdminMode } from "@/app/context/AdminModeContext";
 import { getFirebase } from "@/lib/firebase";
 import { collection, getDocs, deleteDoc, doc, query, orderBy } from "firebase/firestore";
 import Link from "next/link";
