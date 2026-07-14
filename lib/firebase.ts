@@ -1,6 +1,6 @@
-import { initializeApp, getApps, getApp } from "firebase/app";
-import { getAuth, GoogleAuthProvider } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
+import { initializeApp, getApps, getApp, FirebaseApp } from "firebase/app";
+import { getAuth, GoogleAuthProvider, Auth } from "firebase/auth";
+import { getFirestore, Firestore } from "firebase/firestore";
 
 const firebaseConfig = {
     apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -11,8 +11,29 @@ const firebaseConfig = {
     appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+let app: FirebaseApp | undefined;
+let authInstance: Auth | undefined;
+let dbInstance: Firestore | undefined;
+let googleProviderInstance: GoogleAuthProvider | undefined;
 
-export const auth = getAuth(app);
-export const db = getFirestore(app);
-export const googleProvider = new GoogleAuthProvider();
+export function getFirebase() {
+    // Guard against SSR — Firebase client SDK should only run in the browser
+    if (typeof window === "undefined") {
+        return { app: null, auth: null, db: null, googleProvider: null };
+    }
+
+    if (!app) {
+        app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+    }
+    if (!authInstance) {
+        authInstance = getAuth(app);
+    }
+    if (!dbInstance) {
+        dbInstance = getFirestore(app);
+    }
+    if (!googleProviderInstance) {
+        googleProviderInstance = new GoogleAuthProvider();
+    }
+
+    return { app, auth: authInstance, db: dbInstance, googleProvider: googleProviderInstance };
+}

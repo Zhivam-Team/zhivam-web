@@ -2,9 +2,12 @@ import "./globals.css";
 import type { Metadata } from "next";
 import type { Viewport } from "next";
 import { Geist } from "next/font/google";
-import { CartProvider } from "@/app/contexts/CartContext";
+import { AdminModeProvider } from "@/app/context/AdminModeContext";
+import { CartProvider } from "@/app/context/CartContext";
+// import { AuthProvider } from "@/app/contexts/AuthContext";
 import SiteShell from "@/app/components/SiteShell";
-import { AuthProvider } from "@/app/contexts/AuthContext";
+import CartDrawer from "@/app/components/CartDrawer";
+import { AuthProvider } from "@/context/AuthContext";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.zhivam.com";
 const siteName = "Zhivam";
@@ -120,9 +123,12 @@ export default function RootLayout({
                     dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
                 />
                 <AuthProvider>
-                    <CartProvider>
-                        <SiteShell>{children}</SiteShell>
-                    </CartProvider>
+                    <AdminModeProvider>
+                        <CartProvider>
+                            <CartDrawer />
+                            <SiteShell>{children}</SiteShell>
+                        </CartProvider>
+                    </AdminModeProvider>
                 </AuthProvider>
             </body>
         </html>

@@ -10,7 +10,13 @@ import {
     X,
     FileText,
     Wrench,
+    ShoppingCart,
+    User as UserIcon,
+    UserPlus,
+    LogIn,
 } from "lucide-react";
+import { useCart } from "@/app/contexts/CartContext";
+import { useAuth } from "@/context/AuthContext";
 import { useState, useRef, useEffect } from "react";
 import { rdServices } from "@/lib/servicesData";
 import { usePathname } from "next/navigation";
@@ -46,6 +52,8 @@ const navItems = [
 ];
 
 export default function Navbar() {
+    const { cartCount, cartIconRef, setIsDrawerOpen } = useCart();
+    const { user, signOut } = useAuth();
     const pathname = usePathname();
 
     const [showSearch, setShowSearch] = useState(false);
@@ -315,6 +323,22 @@ export default function Navbar() {
                         <Search className="w-[18px] h-[18px]" />
                     </button>
 
+                    {/* CART */}
+                    <button
+                        ref={cartIconRef}
+                        onClick={() => setIsDrawerOpen(true)}
+                        className="relative p-1 text-slate-400 hover:text-cyan-400 transition-colors"
+                        aria-label="Cart"
+                    >
+                        <ShoppingCart className="w-[18px] h-[18px]" />
+                        {cartCount > 0 && (
+                            <span className="absolute -top-1.5 -right-2 bg-cyan-500 text-black text-[10px] font-bold px-1.5 py-0.5 rounded-full z-10">
+                                {cartCount}
+                            </span>
+                        )}
+                    </button>
+
+                    {/* MOBILE CHEVRON */}
                     <button
                         onClick={() => {
                             setMobileOpen(!mobileOpen);
@@ -329,12 +353,65 @@ export default function Navbar() {
                         </motion.div>
                     </button>
 
-                    <Link
-                        href="/login"
-                        className="hidden md:flex items-center gap-1.5 bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/20 hover:border-cyan-400/60 rounded-full px-4 py-2 text-sm font-medium transition-all duration-200"
-                    >
-                        Login <ArrowRight className="w-3.5 h-3.5" />
-                    </Link>
+                    {/* LOGIN / USER PROFILE */}
+                    {user ? (
+                        <div
+                            className="relative"
+                            onMouseEnter={() => handleMouseEnter("profile")}
+                            onMouseLeave={() => handleMouseLeave()}
+                        >
+                            <button className="hidden md:flex items-center gap-2 bg-slate-800/50 border border-slate-700/50 rounded-full pl-2 pr-4 py-1.5 transition-all hover:bg-slate-700/50">
+                                {user?.photoURL ? (
+                                    <img src={user.photoURL} alt="Profile" className="w-6 h-6 rounded-full" />
+                                ) : (
+                                    <div className="w-6 h-6 rounded-full bg-cyan-500/20 flex items-center justify-center text-cyan-400 text-xs font-bold">
+                                        {user?.displayName?.charAt(0) || user?.email?.charAt(0) || "U"}
+                                    </div>
+                                )}
+                                <div className="flex flex-col items-start px-1 leading-none">
+                                    <span className="text-sm font-medium text-white">{user?.displayName || "User"}</span>
+                                    {user?.location && <span className="text-xs text-slate-400 mt-0.5">{user.location}</span>}
+                                </div>
+                                <ChevronDown className="w-3.5 h-3.5 text-slate-400 ml-1" />
+                            </button>
+                            
+                            <AnimatePresence>
+                                {dropdownOpen === "profile" && (
+                                    <motion.div
+                                        initial={{ opacity: 0, y: 5, scale: 0.95 }}
+                                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                                        exit={{ opacity: 0, y: 5, scale: 0.95 }}
+                                        transition={{ duration: 0.15, ease: "easeOut" }}
+                                        className="absolute top-full right-0 pt-4 z-50 w-48"
+                                    >
+                                        <div className="bg-[#0d1520] border border-slate-700/60 rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.5)] overflow-hidden py-2">
+                                            <Link href="/profile" className="block px-5 py-2.5 text-sm text-slate-400 hover:bg-slate-800/60 hover:text-cyan-400 transition-colors cursor-pointer">
+                                                Profile
+                                            </Link>
+                                            {user?.role === "admin" && (
+                                                <Link href="/admin" className="block px-5 py-2.5 text-sm text-slate-400 hover:bg-slate-800/60 hover:text-cyan-400 transition-colors cursor-pointer">
+                                                    Admin Panel
+                                                </Link>
+                                            )}
+                                            <button 
+                                                onClick={() => signOut()}
+                                                className="w-full text-left block px-5 py-2.5 text-sm text-red-400 hover:bg-slate-800/60 hover:text-red-300 transition-colors cursor-pointer"
+                                            >
+                                                Sign Out
+                                            </button>
+                                        </div>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                        </div>
+                    ) : (
+                        <Link
+                            href="/auth"
+                            className="hidden md:flex items-center gap-1.5 bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/20 hover:border-cyan-400/60 rounded-full px-4 py-2 text-sm font-medium transition-all duration-200"
+                        >
+                            Login <ArrowRight className="w-3.5 h-3.5" />
+                        </Link>
+                    )}
                 </div>
             </motion.nav>
 
@@ -492,13 +569,57 @@ export default function Navbar() {
                             </div>
                         );
                     })}
-                    <Link
-                        href="/login"
-                        onClick={() => setMobileOpen(false)}
-                        className="flex items-center px-4 py-3.5 min-h-[48px] text-sm text-cyan-400 hover:bg-cyan-500/10 rounded-xl transition-colors gap-2"
-                    >
-                        Login <ArrowRight className="w-3.5 h-3.5" />
-                    </Link>
+                    {user ? (
+                        <div className="flex flex-col border-t border-slate-700/50 mt-2 pt-2">
+                            <div className="px-4 py-3 flex items-center gap-3">
+                                {user?.photoURL ? (
+                                    <img src={user.photoURL} alt="Profile" className="w-10 h-10 rounded-full object-cover border border-slate-700/50" />
+                                ) : (
+                                    <div className="w-10 h-10 rounded-full bg-cyan-500/20 flex items-center justify-center text-cyan-400 font-bold text-lg border border-cyan-500/30">
+                                        {user?.displayName?.charAt(0) || user?.email?.charAt(0) || "U"}
+                                    </div>
+                                )}
+                                <div>
+                                    <p className="text-sm font-medium text-white">{user?.displayName || "User"}</p>
+                                    <p className="text-xs text-slate-400">{user?.email}</p>
+                                    {user?.location && <p className="text-xs text-slate-400 mt-0.5">{user.location}</p>}
+                                </div>
+                            </div>
+                            <Link
+                                href="/profile"
+                                onClick={() => setMobileOpen(false)}
+                                className="px-4 py-3 text-sm text-slate-300 hover:bg-slate-700/40 hover:text-white transition-colors flex items-center gap-2"
+                            >
+                                <UserIcon className="w-4 h-4" /> Profile
+                            </Link>
+                            {user?.role === "admin" && (
+                                <Link
+                                    href="/admin"
+                                    onClick={() => setMobileOpen(false)}
+                                    className="px-4 py-3 text-sm text-slate-300 hover:bg-slate-700/40 hover:text-white transition-colors flex items-center gap-2"
+                                >
+                                    <UserPlus className="w-4 h-4" /> Admin Panel
+                                </Link>
+                            )}
+                            <button
+                                onClick={() => {
+                                    signOut();
+                                    setMobileOpen(false);
+                                }}
+                                className="px-4 py-3 text-sm text-left text-red-400 hover:bg-red-500/10 transition-colors flex items-center gap-2"
+                            >
+                                <LogIn className="w-4 h-4 rotate-180" /> Sign Out
+                            </button>
+                        </div>
+                    ) : (
+                        <Link
+                            href="/auth"
+                            onClick={() => setMobileOpen(false)}
+                            className="px-4 py-3.5 mt-2 text-sm text-cyan-400 hover:bg-cyan-500/10 rounded-xl transition-colors flex items-center gap-2"
+                        >
+                            <LogIn className="w-4 h-4" /> Login <ArrowRight className="w-3.5 h-3.5 ml-auto" />
+                        </Link>
+                    )}
                 </div>
             </motion.div>
         </>
