@@ -5,7 +5,7 @@ import { getFirebase } from "@/lib/firebase";
 import { collection, doc, setDoc, deleteDoc, onSnapshot } from "firebase/firestore";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
-import { ServiceData } from "@/app/admin/page";
+import { ServiceData } from "@/app/admin/services/page";
 
 export interface FavouriteItem {
   serviceId: string;
