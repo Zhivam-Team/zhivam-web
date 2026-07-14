@@ -627,7 +627,7 @@ export default function Navbar() {
                         </div>
                     ) : (
                         <Link
-                            href="/auth"
+                            href="/login"
                             onClick={() => setMobileOpen(false)}
                             className="px-4 py-3.5 mt-2 text-sm text-cyan-400 hover:bg-cyan-500/10 rounded-xl transition-colors flex items-center gap-2"
                         >
