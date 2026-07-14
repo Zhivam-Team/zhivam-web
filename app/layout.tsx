@@ -6,8 +6,17 @@ import { AdminModeProvider } from "@/app/context/AdminModeContext";
 import { CartProvider } from "@/app/context/CartContext";
 // import { AuthProvider } from "@/app/contexts/AuthContext";
 import SiteShell from "@/app/components/SiteShell";
+<<<<<<< HEAD
 import CartDrawer from "@/app/components/CartDrawer";
 import { AuthProvider } from "@/context/AuthContext";
+=======
+<<<<<<< HEAD
+import { AuthProvider } from "@/app/contexts/AuthContext";
+=======
+import CartDrawer from "@/app/components/CartDrawer";
+import { AuthProvider } from "@/context/AuthContext";
+>>>>>>> aa9f944e608ca8073087fb33ba370b20ed59168d
+>>>>>>> b5e2cab389b75574a9568b24971f231ecd0853a8
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.zhivam.com";
 const siteName = "Zhivam";
@@ -118,17 +127,38 @@ export default function RootLayout({
     return (
         <html lang="en">
             <body className={`${geist.className} bg-black text-white`}>
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> b5e2cab389b75574a9568b24971f231ecd0853a8
                 <script
                     type="application/ld+json"
                     dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
                 />
                 <AuthProvider>
+<<<<<<< HEAD
                     <AdminModeProvider>
+=======
+                    <CartProvider>
+                        <SiteShell>{children}</SiteShell>
+                    </CartProvider>
+=======
+                <AuthProvider>
+                    <AdminModeProvider>
+                        <script
+                            type="application/ld+json"
+                            dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
+                        />
+>>>>>>> b5e2cab389b75574a9568b24971f231ecd0853a8
                         <CartProvider>
                             <CartDrawer />
                             <SiteShell>{children}</SiteShell>
                         </CartProvider>
                     </AdminModeProvider>
+<<<<<<< HEAD
+=======
+>>>>>>> aa9f944e608ca8073087fb33ba370b20ed59168d
+>>>>>>> b5e2cab389b75574a9568b24971f231ecd0853a8
                 </AuthProvider>
             </body>
         </html>
