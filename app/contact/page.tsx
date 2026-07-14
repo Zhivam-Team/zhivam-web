@@ -3,7 +3,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 
 const fadeUp = (delay = 0) => ({
-    initial: { opacity: 0, y: 28 },
+    initial: { opacity: 0, y: 12 },
     animate: { opacity: 1, y: 0 },
     transition: { duration: 0.6, delay, ease: "easeOut" as const },
 });
@@ -207,7 +207,7 @@ export default function ContactPage() {
             >
 
                 {/* ── HEADER + SOCIALS (mobile: 1st, desktop: top-left) ── */}
-                <div className="[grid-area:header] lg:sticky lg:top-28">
+                <div className="[grid-area:header] lg:sticky lg:top-8">
                     <motion.div {...fadeUp(0)} className="inline-flex items-center gap-2 text-xs font-medium text-cyan-400 bg-cyan-400/10 border border-cyan-400/20 rounded-full px-3 py-1 mb-6">
                         <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
                         Available for projects
