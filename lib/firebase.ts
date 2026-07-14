@@ -12,33 +12,25 @@ const firebaseConfig = {
     appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-let app: FirebaseApp | undefined;
-let authInstance: Auth | undefined;
-let dbInstance: Firestore | undefined;
-let googleProviderInstance: GoogleAuthProvider | undefined;
-let storageInstance: FirebaseStorage | undefined;
+// Initialize once, safe for both client and server (build) contexts
+const app: FirebaseApp = getApps().length ? getApp() : initializeApp(firebaseConfig);
 
+const authInstance: Auth = getAuth(app);
+const dbInstance: Firestore = getFirestore(app);
+const googleProviderInstance: GoogleAuthProvider = new GoogleAuthProvider();
+const storageInstance: FirebaseStorage = getStorage(app);
+
+// Named exports — for files that import directly (e.g. AuthContext.tsx)
+export const auth = authInstance;
+export const db = dbInstance;
+export const googleProvider = googleProviderInstance;
+export const storage = storageInstance;
+export { app };
+
+// Function export — for files that use getFirebase()
 export function getFirebase() {
-    // Guard against SSR — Firebase client SDK should only run in the browser
     if (typeof window === "undefined") {
         return { app: null, auth: null, db: null, googleProvider: null, storage: null };
     }
-
-    if (!app) {
-        app = getApps().length ? getApp() : initializeApp(firebaseConfig);
-    }
-    if (!authInstance) {
-        authInstance = getAuth(app);
-    }
-    if (!dbInstance) {
-        dbInstance = getFirestore(app);
-    }
-    if (!googleProviderInstance) {
-        googleProviderInstance = new GoogleAuthProvider();
-    }
-    if (!storageInstance) {
-        storageInstance = getStorage(app);
-    }
-
     return { app, auth: authInstance, db: dbInstance, googleProvider: googleProviderInstance, storage: storageInstance };
 }
