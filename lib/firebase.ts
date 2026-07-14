@@ -1,6 +1,7 @@
 import { initializeApp, getApps, getApp, FirebaseApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider, Auth } from "firebase/auth";
 import { getFirestore, Firestore } from "firebase/firestore";
+import { getStorage, FirebaseStorage } from "firebase/storage";
 
 const firebaseConfig = {
     apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -15,11 +16,12 @@ let app: FirebaseApp | undefined;
 let authInstance: Auth | undefined;
 let dbInstance: Firestore | undefined;
 let googleProviderInstance: GoogleAuthProvider | undefined;
+let storageInstance: FirebaseStorage | undefined;
 
 export function getFirebase() {
     // Guard against SSR — Firebase client SDK should only run in the browser
     if (typeof window === "undefined") {
-        return { app: null, auth: null, db: null, googleProvider: null };
+        return { app: null, auth: null, db: null, googleProvider: null, storage: null };
     }
 
     if (!app) {
@@ -34,6 +36,9 @@ export function getFirebase() {
     if (!googleProviderInstance) {
         googleProviderInstance = new GoogleAuthProvider();
     }
+    if (!storageInstance) {
+        storageInstance = getStorage(app);
+    }
 
-    return { app, auth: authInstance, db: dbInstance, googleProvider: googleProviderInstance };
+    return { app, auth: authInstance, db: dbInstance, googleProvider: googleProviderInstance, storage: storageInstance };
 }
