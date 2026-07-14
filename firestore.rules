@@ -1,0 +1,29 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    match /users/{userId}/{document=**} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    match /services/{document=**} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.token.email == "zhivamdb@gmail.com";
+    }
+    match /blogs/{document=**} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.token.email == "zhivamdb@gmail.com";
+    }
+    match /contacts/{document=**} {
+      allow write: if true;
+      allow read: if request.auth != null && request.auth.token.email == "zhivamdb@gmail.com";
+    }
+    match /carts/{userId}/{document=**} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    match /orders/{document=**} {
+      allow read, write: if request.auth != null;
+    }
+  }
+}
